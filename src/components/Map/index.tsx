@@ -24,6 +24,20 @@ import { orderSelectors } from '../../state/order'
 import './styles.scss'
 
 const defaultZoom = 15
+const LAST_KNOWN_GEO_KEY = 'map:lastKnownGeoCenter'
+
+const getCachedGeoCenter = (): [number, number] | null => {
+  try {
+    const raw = localStorage.getItem(LAST_KNOWN_GEO_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { lat?: number, lng?: number }
+    if (typeof parsed?.lat !== 'number' || typeof parsed?.lng !== 'number')
+      return null
+    return [parsed.lat, parsed.lng]
+  } catch {
+    return null
+  }
+}
 
 const mapStateToProps = (state: IRootState) => ({
   type: modalsSelectors.mapModalType(state),
@@ -54,13 +68,15 @@ function Map({
   containerClassName,
   ...props
 }: IProps) {
+  const initialCenter = defaultCenter || getCachedGeoCenter() || SITE_CONSTANTS.DEFAULT_POSITION
+
   return (
     <div
       className={cn('map-container', containerClassName, { 'map-container--active': isOpen, 'map-container--modal': isModal })}
       key={SITE_CONSTANTS.MAP_MODE}
     >
       <MapContainer
-        center={defaultCenter || SITE_CONSTANTS.DEFAULT_POSITION}
+        center={initialCenter}
         zoom={defaultZoom}
         className='map'
         attributionControl={false}
@@ -155,6 +171,7 @@ function MapContent({
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const latlng = { lat: coords.latitude, lng: coords.longitude }
+        localStorage.setItem(LAST_KNOWN_GEO_KEY, JSON.stringify(latlng))
         setUserCoordinates({
           latitude: latlng.lat,
           longitude: latlng.lng,
