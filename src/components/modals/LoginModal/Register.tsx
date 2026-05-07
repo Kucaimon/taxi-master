@@ -405,7 +405,7 @@ const RegisterForm: React.FC<IProps> = ({
           required: true,
           type: 'password',
         }}
-        label="Repeat password"
+        label={`${t(TRANSLATION.PASSWORD)} (${t(TRANSLATION.REPEATED)})`}
         error={errors.password_repeat?.message}
       />
 
