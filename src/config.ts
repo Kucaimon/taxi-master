@@ -4,16 +4,32 @@ import { setConfigError, setConfigLoaded } from './state/config/actionCreators'
 import { DEFAULT_CONFIG_NAME } from './constants'
 
 let _configName: string
+let _hardTimeoutFired = false
 
 const removePreloader = () => {
+  ;(window as any).preloader?.classList.remove('active')
+  const el = document.getElementById('preloader')
+  if (el) el.classList.remove('active')
+}
+
+const HARD_CONFIG_TIMEOUT_MS = 8000
+
+const startHardTimeout = () => {
   setTimeout(() => {
-    ;(window as any).preloader?.classList.remove('active')
-    const el = document.getElementById('preloader')
-    if (el) el.classList.remove('active')
-  }, 1000)
+    if (_hardTimeoutFired) return
+    _hardTimeoutFired = true
+    console.warn(
+      `[config] Upstream config did not load in ${HARD_CONFIG_TIMEOUT_MS}ms, ` +
+        `falling back to defaults so the UI is not stuck on the spinner.`,
+    )
+    store.dispatch(setConfigError())
+    removePreloader()
+  }, HARD_CONFIG_TIMEOUT_MS)
 }
 
 const applyConfigName = (url: string, name?: string) => {
+  startHardTimeout()
+
   const script = document.createElement('script'),
     _name = name ? `data_${name}.js` : 'data.js'
 
@@ -23,9 +39,12 @@ const applyConfigName = (url: string, name?: string) => {
     }`
     script.async = true
     script.onload = () => {
+      if (_hardTimeoutFired) return
       store.dispatch(setConfigLoaded())
     }
     script.onerror = () => {
+      if (_hardTimeoutFired) return
+      _hardTimeoutFired = true
       store.dispatch(setConfigError())
       removePreloader()
     }

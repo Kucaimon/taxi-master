@@ -130,12 +130,24 @@ function checkValidServiceWorker(swUrl, config) {
 
 export function unregister() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready
-      .then(registration => {
-        registration.unregister()
+    if (navigator.serviceWorker.getRegistrations) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister())
       })
-      .catch(error => {
-        console.error(error.message)
+    } else {
+      navigator.serviceWorker.ready
+        .then(registration => {
+          registration.unregister()
+        })
+        .catch(error => {
+          console.error(error.message)
+        })
+    }
+
+    if (typeof window !== 'undefined' && window.caches && window.caches.keys) {
+      window.caches.keys().then(keys => {
+        keys.forEach(k => window.caches.delete(k))
       })
+    }
   }
 }

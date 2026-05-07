@@ -36,9 +36,9 @@ function* setConfigLoadedSaga() {
   SITE_CONSTANTS.recalculate()
   CURRENCY.recalculated()
 
-  setTimeout(() => {
-    (window as any).preloader?.classList.remove('active')
-  }, 1000)
+  ;(window as any).preloader?.classList.remove('active')
+  const el = document.getElementById('preloader')
+  if (el) el.classList.remove('active')
 
   yield put({ type: ActionTypes.SET_CONFIG_SUCCESS })
 }
