@@ -422,10 +422,18 @@ export const getPointSuggestions = async(targetString?: string, isIntercity?: bo
   }
 }
 
+// Chat server polling is disabled until the upstream
+// (chat.itest24.com) renews its TLS certificate. The current cert is
+// expired (ERR_CERT_DATE_INVALID), so every browser blocks the request
+// and the periodic poll just spams the console with errors. Flip the
+// flag back to true once the cert is fixed.
+const ENABLE_CHAT_SERVER = false
+
 export const activateChatServer = () => {
-  return axios.get('https://chat.itest24.com/wschat/checksrv.php', {
-    params: {
-      s: 1,
-    },
-  }).catch(error => console.error(error))
+  if (!ENABLE_CHAT_SERVER) return Promise.resolve()
+  return axios
+    .get('https://chat.itest24.com/wschat/checksrv.php', {
+      params: { s: 1 },
+    })
+    .catch(error => console.error(error))
 }
