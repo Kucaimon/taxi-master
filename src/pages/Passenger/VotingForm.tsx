@@ -86,6 +86,7 @@ const VotingForm = function VotingForm({
 
   const carSliderRef = useRef<HTMLDivElement>(null)
   const seatSliderRef = useRef<HTMLDivElement>(null)
+  const pendingSubmitMode = useRef<boolean | null>(null)
 
   useImperativeHandle(noSwipeElementsRef, () => [
     carSliderRef.current!,
@@ -132,6 +133,7 @@ const VotingForm = function VotingForm({
       return
 
     if (!user) {
+      pendingSubmitMode.current = voting
       setLoginModal(true)
       return
     }
@@ -185,6 +187,14 @@ const VotingForm = function VotingForm({
     store, setLoginModal, createOrder,
     setIsExpanded, onSubmit,
   ])
+
+  useEffect(() => {
+    if (!user || pendingSubmitMode.current === null)
+      return
+    const pendingVotingMode = pendingSubmitMode.current
+    pendingSubmitMode.current = null
+    submit(pendingVotingMode)
+  }, [user, submit])
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
