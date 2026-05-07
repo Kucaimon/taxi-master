@@ -18,6 +18,9 @@ interface IOptions {
  */
 function t(id: string, options: IOptions = {}) {
   try {
+    if (!id || typeof id !== 'string')
+      return 'Error'
+
     const splittedID = id.split('.')
 
     const category = splittedID.length === 2 ?
@@ -33,13 +36,33 @@ function t(id: string, options: IOptions = {}) {
 
     if (!_data) return 'Error'
 
+    const defaultLangIso = _data.langs?.[_data.default_lang]?.iso
+    const pickById = (dictionary: any) => {
+      if (!dictionary) return undefined
+      return (
+        dictionary?.[language?.id] ??
+        dictionary?.[String(language?.id)] ??
+        dictionary?.[_data.default_lang] ??
+        dictionary?.[String(_data.default_lang)] ??
+        Object.values(dictionary)[0]
+      )
+    }
+    const pickByIso = (dictionary: any) => {
+      if (!dictionary) return undefined
+      return (
+        dictionary?.[language?.iso] ??
+        dictionary?.[defaultLangIso] ??
+        Object.values(dictionary)[0]
+      )
+    }
+
     const possibleCategories: string[] = Object.values(CATEGORIES)
     if (category === CATEGORIES.LANG_VLS)
-      result = _data[category][key][language.id]
+      result = pickById(_data[category]?.[key])
     else if (category === CATEGORIES.BOOKING_DRIVER_STATES && key === '0')
-      result = _data.lang_vls.search[language.id]
+      result = pickById(_data.lang_vls?.search)
     else if (possibleCategories.includes(category))
-      result = _data[category][key][language.iso]
+      result = pickByIso(_data[category]?.[key])
     else
       throw new Error(`Unknown category ${category}`)
 

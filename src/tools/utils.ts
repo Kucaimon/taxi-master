@@ -651,8 +651,15 @@ export const mapBlockObject = (rawObject: TBlockObject) => {
           /t\(([^(^)]*?)\)/g,
           (fullMatch: string, translationParameters: string) => {
             try {
-              const [key, options] = translationParameters.split(',')
-              return t(TRANSLATION[key as keyof typeof TRANSLATION], options ? JSON.parse(options.trim()) : undefined)
+              const [rawKey, options] = translationParameters.split(',')
+              const normalizedKey = rawKey.trim().replace(/^['"]|['"]$/g, '')
+              const translationId =
+                TRANSLATION[normalizedKey as keyof typeof TRANSLATION] ??
+                normalizedKey
+              return t(
+                translationId,
+                options ? JSON.parse(options.trim()) : undefined,
+              )
             } catch (error) {
               console.error(error)
             }

@@ -122,6 +122,12 @@ function Header({
   const languages = SITE_CONSTANTS.LANGUAGES
     .filter(x => x.iso !== (config.SavedConfig !== 'children' ? ' ' : 'ru'))
 
+  const cityLabel = user?.u_city ?
+    ((window as any).data?.cities?.[user.u_city]?.[
+      language.iso ?? (window as any).data?.langs?.[(window as any).default_lang]?.iso
+    ] ?? '') :
+    ''
+
   const handleLanguageChange = (lang: ILanguage) => {
     setCookie('user_lang', lang.iso)
     setLanguage(lang)
@@ -194,7 +200,7 @@ function Header({
       </div>
       <div className='header-logo'><img src={images.logo} alt="" /></div>
       <div className='header-avatar-wrapper'>
-        <span className='header-user-name'>{user?.u_city ? `${( (window as any).data.cities[user?.u_city][ language.iso ??  (window as any).data.langs[(window as any).default_lang].iso ])},` : ''}</span>
+        <span className='header-user-name'>{cityLabel ? `${cityLabel},` : ''}</span>
         <span className='header-user-lng'>{language.iso.toUpperCase()}</span>
         <div
           className="avatar"
