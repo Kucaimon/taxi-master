@@ -28,12 +28,6 @@ import CarClassSlider from '../../components/CarClassSlider'
 import PriceInput from '../../components/PriceInput'
 import './voting-form.scss'
 
-// Backend currently does not expose nearby-cars count or ETA, so the
-// "7 автомобилей рядом" / "~5 минут" UI was rendering hardcoded mock
-// numbers. Hidden by default to avoid misleading users; flip to true
-// once those values are wired through siteConstants / API.
-const SHOW_NEARBY_CARS_INFO = false
-
 const mapStateToProps = (state: IRootState) => ({
   activeOrders: ordersSelectors.activeOrders(state),
   from: clientOrderSelectors.from(state),
@@ -303,24 +297,20 @@ const VotingForm = function VotingForm({
             <span className="passenger-voting-form__car-class-title">
               {t(TRANSLATION.AUTO_CLASS)}
             </span>
-            {SHOW_NEARBY_CARS_INFO && (
-              <>
-                <div className="passenger-voting-form__car-nearby-info">
-                  <Icon
-                    src="carNearby"
-                    className="passenger-voting-form__car-nearby-icon"
-                  />
-                  <span className="passenger-voting-form__car-nearby-info-text">{7} автомобилей рядом</span>
-                </div>
-                <div className="passenger-voting-form__car-nearby-info">
-                  <Icon
-                    src="timeWait"
-                    className="passenger-voting-form__waiting-time-icon"
-                  />
-                  <span className="passenger-voting-form__car-nearby-info-text">~{5} минут</span>
-                </div>
-              </>
-            )}
+            <div className="passenger-voting-form__car-nearby-info">
+              <Icon
+                src="carNearby"
+                className="passenger-voting-form__car-nearby-icon"
+              />
+              <span className="passenger-voting-form__car-nearby-info-text">{7} автомобилей рядом</span>
+            </div>
+            <div className="passenger-voting-form__car-nearby-info">
+              <Icon
+                src="timeWait"
+                className="passenger-voting-form__waiting-time-icon"
+              />
+              <span className="passenger-voting-form__car-nearby-info-text">~{5} минут</span>
+            </div>
           </div>
           <div ref={carSliderRef}>
             <CarClassSlider />
