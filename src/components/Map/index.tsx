@@ -231,7 +231,7 @@ function MapContent({
   }, [map, isPseudoFullscreen])
 
   useEffect(() => {
-    const host = map.getContainer().closest('.map-container')
+    const host = map.getContainer().parentElement as HTMLElement | null
     if (!host) return
     host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
     document.body.classList.toggle('map-fullscreen-active', isPseudoFullscreen)
@@ -313,11 +313,29 @@ function MapContent({
     }
 
     try {
-      if (element.requestFullscreen) await element.requestFullscreen()
-      else if (element.webkitRequestFullscreen) await element.webkitRequestFullscreen()
-      else setIsPseudoFullscreen(true)
+      if (element.requestFullscreen) {
+        await element.requestFullscreen()
+        setTimeout(() => {
+          if (document.fullscreenElement !== element) {
+            setIsPseudoFullscreen(true)
+            setIsFullscreen(true)
+          }
+        }, 150)
+      } else if (element.webkitRequestFullscreen) {
+        await element.webkitRequestFullscreen()
+        setTimeout(() => {
+          if (document.fullscreenElement !== element) {
+            setIsPseudoFullscreen(true)
+            setIsFullscreen(true)
+          }
+        }, 150)
+      } else {
+        setIsPseudoFullscreen(true)
+        setIsFullscreen(true)
+      }
     } catch (error) {
       setIsPseudoFullscreen(true)
+      setIsFullscreen(true)
     }
   }, [map, isPseudoFullscreen])
 
