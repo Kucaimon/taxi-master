@@ -28,6 +28,7 @@ const measureFileSizesBeforeBuild =
     FileSizeReporter.measureFileSizesBeforeBuild;
 const printFileSizesAfterBuild = FileSizeReporter.printFileSizesAfterBuild;
 const useYarn = fs.existsSync(paths.yarnLockFile);
+const appPackage = require(paths.appPackageJson);
 
 // These sizes are pretty large. We'll warn for bundles exceeding them.
 const WARN_AFTER_BUNDLE_GZIP_SIZE = 512 * 1024;
@@ -54,6 +55,7 @@ checkBrowsers(paths.appPath, isInteractive)
         return measureFileSizesBeforeBuild(paths.appBuild);
     })
     .then((previousFileSizes) => {
+        writeBuildVersionFile();
         // Remove all content but keep the directory so that
         // if you're in it, you don't end up in Trash
         fs.emptyDirSync(paths.appBuild);
@@ -92,7 +94,6 @@ checkBrowsers(paths.appPath, isInteractive)
             );
             console.log();
 
-            const appPackage = require(paths.appPackageJson);
             const publicUrl = paths.publicUrl;
             const publicPath = config.output.publicPath;
             const buildFolder = path.relative(process.cwd(), paths.appBuild);
@@ -192,6 +193,16 @@ function build(previousFileSizes) {
             });
         });
     });
+}
+
+function writeBuildVersionFile() {
+    const buildVersion = {
+        version: appPackage.version,
+        buildId: `${appPackage.version}-${Date.now()}`,
+        builtAt: new Date().toISOString(),
+    };
+    const target = path.join(paths.appPublic, "version.json");
+    fs.writeFileSync(target, JSON.stringify(buildVersion, null, 2));
 }
 
 function copyPublicFolder() {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Taxi app"
     />
@@ -46,6 +46,76 @@
         display: flex;
       }
     </style>
+    <script>
+      (function () {
+        var BUILD_KEY = "__taxi_build_id__";
+        var RELOAD_GUARD_KEY = "__taxi_build_reload_once__";
+
+        function clearRuntimeCachesAndReload(nextBuildId) {
+          try {
+            localStorage.setItem(BUILD_KEY, nextBuildId);
+          } catch (e) {}
+
+          var finalizeReload = function () {
+            try {
+              sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
+            } catch (e) {}
+            window.location.reload();
+          };
+
+          try {
+            if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                regs.forEach(function (r) {
+                  r.unregister();
+                });
+              });
+            }
+          } catch (e) {}
+
+          try {
+            if ("caches" in window && caches.keys) {
+              caches.keys().then(function (keys) {
+                Promise.all(
+                  keys.map(function (k) {
+                    return caches.delete(k);
+                  })
+                ).finally(finalizeReload);
+              });
+              return;
+            }
+          } catch (e) {}
+
+          finalizeReload();
+        }
+
+        fetch("%PUBLIC_URL%/version.json?ts=" + Date.now(), { cache: "no-store" })
+          .then(function (res) {
+            return res.ok ? res.json() : null;
+          })
+          .then(function (meta) {
+            if (!meta || !meta.buildId) return;
+
+            var currentBuildId = null;
+            var reloadGuard = null;
+            try {
+              currentBuildId = localStorage.getItem(BUILD_KEY);
+              reloadGuard = sessionStorage.getItem(RELOAD_GUARD_KEY);
+            } catch (e) {}
+
+            if (currentBuildId && currentBuildId !== meta.buildId && !reloadGuard) {
+              clearRuntimeCachesAndReload(meta.buildId);
+              return;
+            }
+
+            try {
+              localStorage.setItem(BUILD_KEY, meta.buildId);
+              sessionStorage.removeItem(RELOAD_GUARD_KEY);
+            } catch (e) {}
+          })
+          .catch(function () {});
+      })();
+    </script>
   </head>
   <body>
     <div id="preloader" class="active">
