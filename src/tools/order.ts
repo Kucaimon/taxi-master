@@ -101,7 +101,6 @@ export const calculateFinalPrice = (order: IOrder | null) => {
     const placeholder = `${key}`
     formula = formula.replace(new RegExp(placeholder, 'g'), value?.toString() || '0')
   })
-  console.log('FINAL FORMULA', formula, '=', eval(formula), ' ~ ', Math.trunc(eval(formula)))
   try {
     return Math.trunc(eval(formula)).toString()
   } catch (e) {

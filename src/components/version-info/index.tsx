@@ -38,20 +38,18 @@ const VersionInfo: React.FC<IProps> = ({ setLanguage }) => {
   const [lastClickTime, setLastClickTime] = useState(0)
 
   const handleClick = () => {
-    console.log('Handling click')
     const currentTime = new Date().getTime()
     const timeDiff = currentTime - lastClickTime
-    
+
     if (timeDiff < 500) {
       setClickCount(prev => prev + 1)
     } else {
       setClickCount(1)
     }
-    
+
     setLastClickTime(currentTime)
 
     if (clickCount === 2) {
-      console.log(getApiConstants()?.langs)
       const langs = getApiConstants()?.langs
       const russianLang = langs ? Object.entries(langs).find(([id, lang]) => lang.tr_code === 'ru') : undefined
       if (russianLang && setLanguage) {

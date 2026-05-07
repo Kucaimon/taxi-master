@@ -14,6 +14,7 @@ import { IUserState } from '../../state/user/constants'
 import { t, TRANSLATION } from '../../localization'
 import PageSection from '../../components/PageSection'
 import StatusCard from '../../components/Card/OrderCard'
+import OrderCardSkeleton from '../../components/Card/OrderCardSkeleton'
 import Separator from '../../components/separator/Separator'
 import Button from '../../components/Button'
 import images from '../../constants/images'
@@ -100,23 +101,25 @@ const DriverOrders: React.FC<IProps> = ({
         className="driver-orders driver-orders--active"
       >
         {
-          (activeOrdersWithoutCandidates?.length && activeOrdersWithoutCandidates?.map(item => (
-            type === EDriverTabs.Lite ?
-              <MiniOrder
-                user={user as IUser}
-                order={item}
-                onClick={() => handleOrderClick(item.b_id)}
-                key={item.b_id}
-              /> :
-              <StatusCard
-                className="driver-order-wide-mode-status-card"
-                style={{ boxShadow: '0px 1px 7px rgba(0, 0, 0, 0.23)', border: 'none' }}
-                onClick={() => handleOrderClick(item.b_id)}
-                key={item.b_id}
-                order={item}
-                user={user as IUser}
-              />
-          ))) || <div className='driver-orders-empty' >{t(TRANSLATION.NO_ACTUAL_DRIVE)}</div>
+          activeOrders === null ?
+            <OrderCardSkeleton count={2} /> :
+            (activeOrdersWithoutCandidates?.length && activeOrdersWithoutCandidates?.map(item => (
+              type === EDriverTabs.Lite ?
+                <MiniOrder
+                  user={user as IUser}
+                  order={item}
+                  onClick={() => handleOrderClick(item.b_id)}
+                  key={item.b_id}
+                /> :
+                <StatusCard
+                  className="driver-order-wide-mode-status-card"
+                  style={{ boxShadow: '0px 1px 7px rgba(0, 0, 0, 0.23)', border: 'none' }}
+                  onClick={() => handleOrderClick(item.b_id)}
+                  key={item.b_id}
+                  order={item}
+                  user={user as IUser}
+                />
+            ))) || <div className='driver-orders-empty' >{t(TRANSLATION.NO_ACTUAL_DRIVE)}</div>
         }
       </div>
       {!!candidateOrders?.length && (
@@ -180,23 +183,25 @@ const DriverOrders: React.FC<IProps> = ({
           }
         </div>
         {
-          readyOrders?.map(item => (
-            type === EDriverTabs.Lite ?
-              <MiniOrder
-                user={user as IUser}
-                order={item}
-                onClick={() => handleOrderClick(item.b_id)}
-                key={item.b_id}
-                isHistory={false}
-              /> :
-              <StatusCard
-                style={{ boxShadow: '0px 1px 7px rgba(0, 0, 0, 0.23)', border: 'none' }}
-                onClick={() => handleOrderClick(item.b_id)}
-                key={item.b_id}
-                order={item}
-                user={user as IUser}
-              />
-          ))
+          readyOrders === null && showReadyOrders ?
+            <OrderCardSkeleton count={2} /> :
+            readyOrders?.map(item => (
+              type === EDriverTabs.Lite ?
+                <MiniOrder
+                  user={user as IUser}
+                  order={item}
+                  onClick={() => handleOrderClick(item.b_id)}
+                  key={item.b_id}
+                  isHistory={false}
+                /> :
+                <StatusCard
+                  style={{ boxShadow: '0px 1px 7px rgba(0, 0, 0, 0.23)', border: 'none' }}
+                  onClick={() => handleOrderClick(item.b_id)}
+                  key={item.b_id}
+                  order={item}
+                  user={user as IUser}
+                />
+            ))
         }
       </div>
       <Separator
@@ -208,24 +213,26 @@ const DriverOrders: React.FC<IProps> = ({
         className={cn('driver-orders', { 'driver-orders--active': showHistoryOrders })}
       >
         {
-          historyOrders?.map(item => (
-            type === EDriverTabs.Lite ?
-              <MiniOrder
-                user={user as IUser}
-                order={item}
-                onClick={() => handleOrderClick(item.b_id)}
-                key={item.b_id}
-                isHistory={true}
-              /> :
-              <StatusCard
-                className="driver-order-wide-mode-status-card"
-                style={{ boxShadow: '0px 1px 7px rgba(0, 0, 0, 0.23)', border: 'none' }}
-                onClick={() => handleOrderClick(item.b_id)}
-                key={item.b_id}
-                order={item}
-                user={user as IUser}
-              />
-          ))
+          historyOrders === null && showHistoryOrders ?
+            <OrderCardSkeleton count={2} /> :
+            historyOrders?.map(item => (
+              type === EDriverTabs.Lite ?
+                <MiniOrder
+                  user={user as IUser}
+                  order={item}
+                  onClick={() => handleOrderClick(item.b_id)}
+                  key={item.b_id}
+                  isHistory={true}
+                /> :
+                <StatusCard
+                  className="driver-order-wide-mode-status-card"
+                  style={{ boxShadow: '0px 1px 7px rgba(0, 0, 0, 0.23)', border: 'none' }}
+                  onClick={() => handleOrderClick(item.b_id)}
+                  key={item.b_id}
+                  order={item}
+                  user={user as IUser}
+                />
+            ))
         }
       </div>
     </PageSection>

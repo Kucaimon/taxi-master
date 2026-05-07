@@ -275,7 +275,6 @@ function* initUserSaga() {
       const savedLang = getCookie('user_lang')
       if (savedLang) {
         const language = SITE_CONSTANTS.LANGUAGES.find(i => i.iso === savedLang)
-        console.log('Found language from cookie:', language)
         if (language) {
           yield put({
             type: ConfigActionTypes.SET_LANGUAGE,
@@ -327,7 +326,6 @@ function* whatsappSignUpSaga(data: TAction) {
 
     yield put(setRefCodeModal({ isOpen: false }))
     yield put({ type: ActionTypes.WHATSAPP_SIGNUP_SUCCESS, payload: result })
-    console.log('запускаем loginSaga')
     yield* call(loginSaga, {
       type: ActionTypes.LOGIN_REQUEST,
       payload: {

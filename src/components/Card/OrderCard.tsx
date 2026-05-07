@@ -100,22 +100,6 @@ function OrderCard({
       // onClick={onClick}
       onClick={() => setOrderCardModal({ isOpen: true, orderId: order.b_id })}
     >
-      {/* {showChat && user ?
-        (
-          <div id={chatHostDivID} className="order-chat"> */}
-      {/* TODO remove ignore */}
-      {/* @ts-ignore */}
-      {/* <Chat
-              parentID={chatHostDivID}
-              chatTag={order.b_id}
-              userID={user.u_id}
-              myName={'me'}
-              hisName={'customer'}
-              mode={ChatUpdaterMode.DRIVER}
-            />
-          </div>
-        ) :
-        null} */}
       <div className="status-card__top" >
         <span className="status-card__time">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" ><path d="M8 14C11.3137 14 14 11.3137 14 8C14 4.68629 11.3137 2 8 2C4.68629 2 2 4.68629 2 8C2 11.3137 4.68629 14 8 14Z" stroke="#FF2400" strokeLinecap="round" strokeLinejoin="round"/><path d="M7.82996 5.33334V8.66668H11.1633" stroke="#FF2400" strokeLinecap="round" strokeLinejoin="round"/></svg>

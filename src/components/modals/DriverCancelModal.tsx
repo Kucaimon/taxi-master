@@ -32,7 +32,6 @@ const CancelDriverOrderModal: React.FC<IProps> = ({
   const navigate = useNavigate()
 
   const onCancel = () => {
-    console.log('onCancel', selectedOrderId)
     if (selectedOrderId) {
       API.cancelDrive(selectedOrderId)
       navigate('/driver-order')

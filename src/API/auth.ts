@@ -160,7 +160,6 @@ const _googleLogin = (
     auth_hash: string | null
   },
 ): Promise<{ user: IUser, tokens: ITokens } | null> => {
-  console.log(auth)
   if(auth.auth_hash === null) {
     addToFormData(formData, {
       ...auth.data,

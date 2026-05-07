@@ -26,8 +26,6 @@ export function OpacityLayer({ children, isShownShortInfo, threshold, draggableE
     if(!blockOpacityRef.current.carSlider && !blockOpacityRef.current.seatSlider) return
     blockOpacityRef.current.carSlider = blockOpacityElements?.carSlider
     blockOpacityRef.current.seatSlider = blockOpacityElements?.seatSlider
-
-    console.log(blockOpacityRef.current.carSlider, blockOpacityRef.current.seatSlider)
   }, [])
 
 
@@ -54,18 +52,14 @@ export function OpacityLayer({ children, isShownShortInfo, threshold, draggableE
     if (!blockOpacityRef.current.carSlider && !blockOpacityRef.current.seatSlider) return
     if (blockOpacityRef.current.carSlider?.contains(e.target as Node) || blockOpacityRef.current.seatSlider?.contains(e.target as Node)) {
       canMove = false
-      console.log('cant move')
       return
     } else { canMove = true
       startY = e.touches[0].clientY}
   }
 
   function move(e: TouchEvent) {
-    console.log(canMove, 'move function')
     if (!canMove) return
     if (!elementRef.current) return
-    // if (!blockOpacityRef.current.carSlider && !blockOpacityRef.current.seatSlider) return
-    // console.log(blockOpacityRef)
 
     deltaY = e.touches[0].clientY - startY
     if(!isShownShortInfo && deltaY < 0) return
@@ -93,7 +87,6 @@ export function OpacityLayer({ children, isShownShortInfo, threshold, draggableE
         initOpacity = 0
       }
     } else {
-      console.log('else', initOpacity)
       setOpacity(initOpacity)
     }
     canMove = false

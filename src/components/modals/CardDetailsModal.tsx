@@ -44,10 +44,7 @@ const CardDetailsModal: React.FC<IProps> = ({
   const onSubmit = (data: any, e?: React.BaseSyntheticEvent) => {
     (e as React.BaseSyntheticEvent).preventDefault()
 
-    if (isValid) {
-      console.log('Fields is valid')
-
-    } else {
+    if (!isValid) {
       console.error('Fields is not valid')
     }
 

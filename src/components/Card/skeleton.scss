@@ -1,0 +1,76 @@
+// Skeleton placeholder for OrderCard. Visual goal: same vertical
+// rhythm as `.status-card` so swapping skeleton -> real card does not
+// cause a layout shift on slow connections.
+
+@keyframes status-card-skeleton-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.status-card--skeleton {
+  cursor: default;
+  pointer-events: none;
+  // Match real card colours but desaturated.
+  border-color: rgba(174, 0, 0, 0.18);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+
+  // Align the skeleton row gaps with the real card.
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .status-card__top {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-card__points {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .skeleton-line {
+    display: inline-block;
+    height: 12px;
+    border-radius: 6px;
+    background: #f1f1f1
+      linear-gradient(
+        90deg,
+        rgba(241, 241, 241, 1) 0%,
+        rgba(220, 220, 220, 0.6) 50%,
+        rgba(241, 241, 241, 1) 100%
+      )
+      no-repeat;
+    background-size: 200px 100%;
+    animation: status-card-skeleton-shimmer 1.4s linear infinite;
+
+    &--time {
+      width: 90px;
+    }
+    &--number {
+      width: 60px;
+      height: 10px;
+    }
+    &--row {
+      width: 100%;
+      max-width: 320px;
+    }
+    &--cost {
+      width: 110px;
+      height: 18px;
+    }
+  }
+}
+
+// Respect users who explicitly request reduced motion: keep the
+// placeholder visible but stop the shimmer.
+@media (prefers-reduced-motion: reduce) {
+  .status-card--skeleton .skeleton-line {
+    animation: none;
+  }
+}

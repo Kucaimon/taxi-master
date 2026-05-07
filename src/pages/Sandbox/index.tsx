@@ -138,7 +138,7 @@ const Sandbox = () => {
             key={contentKey}
             style={{ position: 'relative', minHeight: '100vh' }}
           >
-            <form onSubmit={() => console.log('submit')}>
+            <form onSubmit={(e) => e.preventDefault()}>
               <ConstructorTab
                 form={form}
                 values={values}

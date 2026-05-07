@@ -30,7 +30,6 @@ export default function reducer(state = new record(), action: TAction) {
         .set('user', payload.user)
         .set('tokens', payload.tokens)
     case ActionTypes.LOGIN_FAIL:
-      console.log('LOGIN_FAIL', payload)
       return state
         .set('status', EStatuses.Fail)
         .set('message', payload)

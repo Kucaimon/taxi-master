@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react'
-import { Route, Routes, Navigate } from 'react-router-dom'
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom'
 import {
   configSelectors,
 } from './state/config'
@@ -15,6 +15,7 @@ import PageSection from './components/PageSection'
 const PassengerOrder = lazy(() => import('./pages/Passenger'))
 const Order = lazy(() => import('./pages/Order'))
 const DriverOrder = lazy(() => import('./pages/Driver'))
+const ConfigHud = lazy(() => import('./pages/ConfigHud'))
 
 const mapStateToProps = (state: IRootState) => ({
   status: configSelectors.status(state),
@@ -28,6 +29,12 @@ interface IProps extends ConnectedProps<typeof connector> {
 }
 
 const AppRoutesWrapper: React.FC<IProps> = ({ status, user }) => {
+  // /config must stay reachable even when the upstream config is broken,
+  // otherwise QA/admins cannot recover from the "DB unavailable" screen.
+  const location = useLocation()
+  if (location.pathname === '/config') {
+    return <Suspense fallback={null}><ConfigHud /></Suspense>
+  }
   return status === EStatuses.Success ?
     <Suspense fallback={null}><AppRoutes user={user}/></Suspense> :
     <UnavailableBase/>
@@ -68,6 +75,7 @@ const AppRoutes = ({ user }: {user: IUser | null}) => (
     <Route path="/driver-order" element={<DriverOrder />} />
     <Route path="/driver-order-test" element={<DriverOrder />} />
     <Route path="/sandbox" element={<Sandbox />} />
+    <Route path="/config" element={<ConfigHud />} />
   </Routes>
 )
 

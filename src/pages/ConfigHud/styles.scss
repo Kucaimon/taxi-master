@@ -1,0 +1,111 @@
+.config-hud {
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 24px;
+  font-family: 'Mulish', sans-serif;
+  color: #1a1a1a;
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: 24px;
+  }
+
+  &__hint {
+    margin: 0 0 24px;
+    color: #777;
+    font-size: 14px;
+  }
+
+  &__section {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background: #fff;
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 16px;
+      margin: 0 0 12px;
+      font-size: 14px;
+    }
+
+    dt {
+      color: #777;
+    }
+
+    dd {
+      margin: 0;
+      word-break: break-all;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 12px;
+      background: #f6f6f6;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  &__row--inline {
+    margin-top: 12px;
+  }
+
+  &__input {
+    flex: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  &__btn {
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &--danger {
+      color: #c00;
+      border-color: #f1c0c0;
+
+      &:hover {
+        background: #fff5f5;
+      }
+    }
+  }
+}
