@@ -158,4 +158,16 @@
 
 body.map-fullscreen-active {
   overflow: hidden;
+
+  // Hide passenger overlays while map is in pseudo fullscreen mode.
+  .layout__header,
+  .passenger__mini-orders,
+  .passenger__form-placeholder,
+  .passenger__form-container {
+    display: none !important;
+  }
+
+  .page-section.passenger {
+    height: 100dvh !important;
+  }
 }
