@@ -164,15 +164,35 @@
 body.map-fullscreen-active {
   overflow: hidden;
 
-  // Hide passenger overlays while map is in pseudo fullscreen mode.
+  // Hide chrome-style overlays only (header, side mini-orders, the
+  // placeholder spacer). Keep the bottom form ("подвал") visible because
+  // fullscreen is meant to hide the browser URL bar, not the form.
   .layout__header,
   .passenger__mini-orders,
-  .passenger__form-placeholder,
-  .passenger__form-container {
+  .passenger__form-placeholder {
     display: none !important;
   }
 
   .page-section.passenger {
     height: 100dvh !important;
+  }
+
+  // Pin the bottom form above the fullscreen map.
+  .passenger__form-container {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    z-index: 2100 !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    max-height: 60dvh !important;
+    padding-top: 0 !important;
+  }
+
+  .passenger__draggable {
+    max-height: calc(60dvh - env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
