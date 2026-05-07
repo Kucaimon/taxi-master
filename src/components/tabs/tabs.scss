@@ -44,4 +44,16 @@
          }
       }
    }
+
+   @media (max-width: 430px) {
+      & > div {
+         width: auto;
+         flex: 1 1 0;
+         min-width: 0;
+      }
+
+      &__label {
+         font-size: 12px;
+      }
+   }
 }
