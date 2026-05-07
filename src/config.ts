@@ -5,6 +5,7 @@ import { DEFAULT_CONFIG_NAME } from './constants'
 
 let _configName: string
 let _hardTimeoutFired = false
+let _configLoaded = false
 
 const removePreloader = () => {
   ;(window as any).preloader?.classList.remove('active')
@@ -16,7 +17,7 @@ const HARD_CONFIG_TIMEOUT_MS = 30000
 
 const startHardTimeout = () => {
   setTimeout(() => {
-    if (_hardTimeoutFired) return
+    if (_hardTimeoutFired || _configLoaded) return
     _hardTimeoutFired = true
     console.warn(
       `[config] Upstream config did not load in ${HARD_CONFIG_TIMEOUT_MS}ms, ` +
@@ -39,11 +40,12 @@ const applyConfigName = (url: string, name?: string) => {
     }`
     script.async = true
     script.onload = () => {
-      if (_hardTimeoutFired) return
+      if (_configLoaded) return
+      _configLoaded = true
       store.dispatch(setConfigLoaded())
     }
     script.onerror = () => {
-      if (_hardTimeoutFired) return
+      if (_configLoaded || _hardTimeoutFired) return
       _hardTimeoutFired = true
       store.dispatch(setConfigError())
       removePreloader()
