@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import cn from 'classnames'
 import L from 'leaflet'
 import {
@@ -100,6 +100,7 @@ function MapContent({
     useState<number | null>(null)
   const [routeInfo, setRouteInfo] = useState<IRouteInfo | null>(null)
   const [showRouteInfo, setShowRouteInfo] = useState(false)
+  const hasCenteredOnUser = useRef(false)
 
   let from: IAddressPoint | null = null,
     to: IAddressPoint | null = null
@@ -149,37 +150,36 @@ function MapContent({
     }
   }, [isOpen])
 
-  useEffect(() => {
-    if (!map) return
-
-    map.once('locationfound', (e: L.LocationEvent) => {
-      setUserCoordinates({
-        latitude: e.latlng.lat,
-        longitude: e.latlng.lng,
-      })
-      setUserCoordinatesAccuracy(e.accuracy)
-      if (!defaultCenter)
-        map.setView(e.latlng)
-    })
-    map.once('locationerror', (e: L.ErrorEvent) => console.error(e.message))
-    map.locate({
-      timeout: Infinity,
-      enableHighAccuracy: true,
-    })
-  }, [map])
-
-  useInterval(() => {
+  const requestUserLocation = useCallback((shouldCenter = false) => {
+    if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
+        const latlng = { lat: coords.latitude, lng: coords.longitude }
         setUserCoordinates({
-          latitude: coords.latitude,
-          longitude: coords.longitude,
+          latitude: latlng.lat,
+          longitude: latlng.lng,
         })
         setUserCoordinatesAccuracy(coords.accuracy)
+        if (shouldCenter && !defaultCenter && !hasCenteredOnUser.current) {
+          map.setView(latlng)
+          hasCenteredOnUser.current = true
+        }
       },
       error => console.error(error),
-      { enableHighAccuracy: true },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 15000,
+      },
     )
+  }, [map, defaultCenter])
+
+  useEffect(() => {
+    requestUserLocation(true)
+  }, [requestUserLocation])
+
+  useInterval(() => {
+    requestUserLocation()
   }, 20000)
 
   useEffect(() => {
@@ -208,6 +208,7 @@ function MapContent({
     if (!from?.latitude || !from?.longitude || !to?.latitude || !to?.longitude)
       return
     let changed = false
+    let hideRouteInfoTimer: ReturnType<typeof setTimeout> | null = null
 
     API.makeRoutePoints(from, to)
       .then((info) => {
@@ -215,7 +216,7 @@ function MapContent({
           return
         setRouteInfo(info)
         setShowRouteInfo(true)
-        setTimeout(() => {
+        hideRouteInfoTimer = setTimeout(() => {
           setShowRouteInfo(false)
         }, 5000)
       })
@@ -225,6 +226,8 @@ function MapContent({
 
     return () => {
       changed = true
+      if (hideRouteInfoTimer)
+        clearTimeout(hideRouteInfoTimer)
     }
   }, [from, to])
 
