@@ -46,8 +46,6 @@ interface IFormValues {
   u_name: string;
   u_phone: string;
   u_email: string;
-  password?: string;
-  password_repeat?: string;
   ref_code: string;
   type: ERegistrationType;
   u_role: EUserRoles;
@@ -146,14 +144,6 @@ const RegisterForm: React.FC<IProps> = ({
       is: (type: ERegistrationType) => type === ERegistrationType.Phone,
       then: yup.string().required(t(TRANSLATION.REQUIRED_FIELD)).trim(),
     }),
-    password: yup.string().when('type', {
-      is: (type: ERegistrationType) => type === ERegistrationType.Email,
-      then: yup.string().required(t(TRANSLATION.REQUIRED_FIELD)).trim(),
-    }),
-    password_repeat: yup.string().when('type', {
-      is: (type: ERegistrationType) => type === ERegistrationType.Email,
-      then: yup.string().required(t(TRANSLATION.REQUIRED_FIELD)).trim(),
-    }),
     street: getYupSchema(yup.string().trim(), isDefaultDriver && requireFeildsMap.street),
     city: getYupSchema(yup.string().trim(), isDefaultDriver && requireFeildsMap.city),
     state: getYupSchema(yup.string().trim(), isDefaultDriver && requireFeildsMap.state),
@@ -169,8 +159,6 @@ const RegisterForm: React.FC<IProps> = ({
     formState: { errors, isValid },
     control,
     setValue,
-    setError,
-    clearErrors,
   } = useForm<IFormValues>({
     criteriaMode: 'all',
     mode: 'all',
@@ -223,15 +211,6 @@ const RegisterForm: React.FC<IProps> = ({
   const onSubmit = (data: IFormValues) => {
     if (getPhoneError(u_phone, type === ERegistrationType.Phone)) return
 
-    if (type === ERegistrationType.Email && data.password !== data.password_repeat) {
-      setError('password_repeat', {
-        type: 'manual',
-        message: 'Passwords do not match',
-      })
-      return
-    }
-    clearErrors('password_repeat')
-
     if (isRegistrationAlertVisible) {
       toggleRegistrationAlertVisibility()
     }
@@ -259,9 +238,6 @@ const RegisterForm: React.FC<IProps> = ({
       u_name: data.u_name,
       u_phone: normalizedPhone,
       u_email: data.u_email,
-      password: data.password,
-      password_repeat: data.password_repeat,
-      u_pass: data.password,
       u_role: data.u_role || EUserRoles.Client,
       u_city: data.city,
       ref_code: data.ref_code || undefined,
@@ -385,28 +361,6 @@ const RegisterForm: React.FC<IProps> = ({
         }}
         label={t(TRANSLATION.EMAIL)}
         error={errors.u_email?.message}
-      />
-      <Input
-        inputProps={{
-          ...formRegister('password', {
-            required: t(TRANSLATION.REQUIRED_FIELD),
-          }),
-          required: true,
-          type: 'password',
-        }}
-        label={t(TRANSLATION.PASSWORD)}
-        error={errors.password?.message}
-      />
-      <Input
-        inputProps={{
-          ...formRegister('password_repeat', {
-            required: t(TRANSLATION.REQUIRED_FIELD),
-          }),
-          required: true,
-          type: 'password',
-        }}
-        label="Repeat password"
-        error={errors.password_repeat?.message}
       />
 
       <Checkbox
