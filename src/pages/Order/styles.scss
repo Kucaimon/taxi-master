@@ -1,0 +1,177 @@
+.order {
+  display: flex;
+  flex-direction: column;
+
+  &_passenger-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px;
+
+    > span {
+      display: flex;
+      flex-direction: column;
+      margin-left: 17px;
+
+      span {
+        font-weight: normal;
+        font-size: 26px;
+        line-height: 30px;
+      }
+
+      div {
+        img {
+          height: 17px;
+        }
+      }
+    }
+  }
+
+  &__separator {
+    border-bottom: 1px solid rgba(79, 0, 0, 0.22);
+    box-shadow: 0px 1px 0px #FFFFFF;
+    margin-bottom: 10px;
+    height: 0;
+  }
+
+  &__from-to {
+    margin-bottom: 10px;
+
+    h3, .from-delivery, .to-delivery {
+      font-size: 20px;
+      line-height: 23px;
+      margin: 0 0 10px 0;
+    }
+
+    .from-delivery, .to-delivery {
+      font-weight: normal;
+      span {
+        display: block;
+        margin-bottom: 20px;
+      }
+      .group {
+        display: flex;
+        justify-content: space-between;
+      }
+    }
+
+    .from, .to {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+
+      &__buttons {
+        display: flex;
+        align-items: center;
+
+        img {
+          width: 25px;
+          margin-left: 10px;
+        }
+      }
+
+      label {
+        font-weight: 300;
+        font-size: 20px;
+        line-height: 23px;
+
+        span {
+          font-weight: 600;
+        }
+      }
+    }
+
+    .estimate-time {
+      margin-bottom: 10px;
+      color: #B8B8B8;
+    }
+  }
+
+  .order-info {
+    &__furniture {
+      img {
+        vertical-align: middle
+      }
+      span {
+        font-weight: 300 !important;
+      }
+    }
+  }
+
+  .order-fields {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+
+    .phone-link {
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 300ms ease;
+    }
+
+    .order-fields__title {
+      margin-right: 8px;
+    }
+
+    img {
+      margin-right: 10px;
+      width: 25px;
+    }
+
+    label {
+      font-weight: normal;
+      font-size: 20px;
+      line-height: 23px;
+
+      span {
+        font-weight: 600;
+        .negative {
+          font-weight: 300;
+        }
+      }
+    }
+    
+    .currency {
+      font-weight: 500;
+      font-size: 25px;
+      line-height: 34px;
+      text-align: right;
+      color: #FF5C00;
+      margin-right: 10px;
+    }
+  }
+
+  &_comment {
+    align-items: flex-start;
+  }
+
+  &_take-order-btn {
+    margin-top: 15px;
+    margin-bottom: 5px;
+
+    button {
+      background: linear-gradient(90deg, #EC4C60 0%, #991B0E 100%);
+    }
+  }
+
+  &_hide-order-btn {
+    margin: 15px 0 15px 0;
+
+    button {
+      background: linear-gradient(107.25deg, #E8E8E8 10.86%, #B0B0B0 102.23%);
+      border: 2px solid #939393;
+      color: #4A4A4A !important;
+    }
+  }
+
+  &_alarm-btn {
+    margin-top: 10px;
+
+    button {
+      background: linear-gradient(107.25deg, #FFE34E 10.86%, #FFF500 102.23%);
+      border: 2px solid #FBD300;
+      box-sizing: border-box;
+      color: #414141 !important;
+    }
+  }
+}

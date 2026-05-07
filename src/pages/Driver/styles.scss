@@ -1,0 +1,380 @@
+@import "../../tools/mixins.scss";
+
+.driver {
+  &-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+    margin-top: 8px;
+    padding: 0 16px;
+
+    &__tab {
+      border: none;
+      background: none;
+      font-family: Roboto;
+      font-weight: 600;
+      font-size: 13px;
+      color: rgb(0, 0, 0, 0.25);
+      background-color: #E7E7E7;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 8px 0;
+
+      &--active {
+        background-color: #FF2400;
+        color: #FFFFFF;
+      }
+    }
+
+    span {
+      font-weight: 300;
+      font-size: 17px;
+      line-height: 20px;
+      color: #5E5E5E;
+    }
+
+    label {
+      margin: 0 5px;
+    }
+  }
+
+  &-statuses {
+    width: auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 8px 0;
+
+    span {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+
+      label {
+        font-weight: 300;
+        font-size: 17px;
+        line-height: 20px;
+        color: #5E5E5E;
+      }
+
+      &:not(:last-child) {
+        border-right: 1px solid #F1F1F1;
+        padding-right: 8px;
+      }
+
+      .requested,
+      .recomended,
+      .trip,
+      .waiting,
+      .rating,
+      .urgently,
+      .taken {
+        height: 24px;
+        width: 24px;
+        border-radius: 8px;
+        margin-right: 4px;
+        border: 1px solid #FF2400;
+      }
+
+      .recomended {
+        background: #00A72F;
+        border: 1px solid transparent;
+      }
+
+      .requested {
+        background: #FFD12E;
+        border: 1px solid transparent;
+      }
+    }
+  }
+
+  &-orders {
+    position: relative;
+    height: 0;
+    overflow: hidden;
+    font-weight: 400;
+    padding: 0;
+    
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      width: calc(100% - 32px);
+      height: 1px;
+      background-color: #F1F1F1;
+      bottom: 0;
+    }
+
+    &--active {
+      height: auto;
+      padding: 10px 16px 16px 16px;
+    }
+
+    &-empty {
+      font-size: 13px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Стиль для стрелки (фиксируем размер и делаем pointer-events: none, чтобы клики шли на Marker)
+.order-marker > img,
+.driver-arrow-divicon img {
+  display: block !important;
+  width: 40px !important; /* match iconSize */
+  height: auto !important;
+  pointer-events: none;
+}
+
+.driver-order-map-mode {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+
+  .leaflet-div-icon {
+    background: none;
+    border: none;
+    padding: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .leaflet-top.leaflet-left {
+    z-index: 400;
+  }
+
+  .map {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .no-coords-orders {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 400;
+    color: red;
+    background-color: white;
+    padding: 20px;
+    cursor: pointer;
+    border: none;
+  }
+
+  // inline-block чтобы сохранять элемент как единый блок размеров и не меняет центр/anchor
+  .order-marker {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    position: relative;
+    cursor: pointer;
+
+    &--profit {
+      &--low {
+        .order-marker-hint {
+          background: #C19276;
+        }
+        .order-profit-estimation {
+          color: #3E0C0C;
+        }
+      }
+      &--medium {
+        .order-marker-hint {
+          background: #FFFB8E;
+        }
+        .order-profit-estimation {
+          color: #A37211;
+        }
+      }
+      &--high {
+        .order-marker-hint {
+          background: #A1FF97;
+        }
+        .order-profit-estimation {
+          color: #22A613;
+        }
+      }
+    }
+  }
+
+  .order-profit-estimation {
+    color: #636363;
+  }
+
+  .popup-list {
+    ul {
+      padding: 0;
+      list-style-type: none;
+      margin: 0;
+
+      li {
+        text-align: center;
+      }
+    }
+
+    border-radius: 10px;
+    height: 40px;
+    width: fit-content;
+    padding: 0 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    position: relative;
+    left: 50%;
+    transform: translate(-50%, -25%);
+    line-height: 1;
+    box-shadow: 3px 3px 10px -2px rgba(0, 0, 0, 0.75);
+    z-index: 3;
+  }
+
+  // Позиционируется absolute внутри иконки, для того чтобы не влиять на геометрию иконки(Leaflet позиционирует иконку корректно)
+  .order-marker-hint {
+    display: block;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 4px;
+    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.24);
+    background: rgba(255, 255, 255, 1);
+    width: auto;
+    max-width: 220px;
+    z-index: 10;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+
+    .row-info {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      font-family: "Inter variant1", Tofu;
+      // font-style: italic;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 16px;
+      letter-spacing: 0px;
+      width: 100%;
+      text-align: center;
+      // text-wrap-mode: nowrap;
+
+      * {
+        font-family: "Inter variant1", Tofu;
+        // font-family: "Inter", serif;
+        // font-style: italic;
+        font-optical-sizing: auto;
+        font-weight: 400;
+        font-style: normal;
+        font-size: 14px;
+        line-height: 16px;
+        letter-spacing: 0px;
+      }
+
+      .competitors-num {
+        border-radius: 8px;
+        background-color: rgba(209, 120, 255, 1);
+        margin-left: 5px;
+        padding: 0 2px;
+      }
+
+      .price {
+        background: rgba(255, 223, 66, 1);
+        margin-right: 5px;
+        padding: 0 2px;
+      }
+
+      .tips {
+        background: rgba(202, 226, 108, 1);
+        margin-right: 5px;
+        padding: 0 2px;
+      }
+
+      .order-profit {}
+    }
+  }
+
+  img {
+    z-index: auto;
+  }
+
+  hr {
+    border: none;
+    background-color: #353535;
+    width: 2px;
+    position: absolute;
+    left: calc(50% - 1px);
+
+    &.top {
+      top: 25px;
+      z-index: 2;
+      height: 35px;
+    }
+
+    &.bottom {
+      bottom: -2px;
+      z-index: -1;
+      height: 22px;
+    }
+  }
+
+  .bottom-dot {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: calc(50% - 4px);
+    background-color: black;
+    width: 8px;
+    height: 7px;
+    border-radius: 50%;
+    z-index: -2;
+  }
+
+  .finish-drive-button {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    background-color: #FF2400;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: darken(#FF2400, 5%);
+    }
+
+    @media (max-width: 1024px) {
+      bottom: 100px;
+      width: calc(100% - 32px);
+      max-width: none;
+    }
+
+    @media (max-width: 768px) {
+      bottom: 90px;
+    }
+  }
+}
+
+.errorIcon {
+  margin-top: 20px;
+  width: 250px;
+  height: 250px;
+  min-height: 250px;
+  text-align: center;
+  background: #fff;
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  border-radius: 100%;
+}

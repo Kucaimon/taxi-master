@@ -1,0 +1,113 @@
+@import "../../tools/mixins";
+
+$formPlaceholderHeight: 208px - 16px;
+$formContainerTop: -40px - 8px - 16px;
+
+.passenger {
+  &__mini-orders {
+    position: absolute;
+    z-index: 1;
+    margin-bottom: 20px;
+  }
+
+  &__form-map-container {
+    margin-top: -16px;
+    flex-grow: 1;
+    flex-basis: 100%;
+    z-index: 0;
+  }
+
+  &__form-placeholder {
+    flex: none;
+    width: 100%;
+    height: $formPlaceholderHeight;
+  }
+
+  &__form-container {
+    position: absolute;
+    top: $formContainerTop;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    row-gap: 8px;
+    overflow: hidden;
+    width: 100%;
+    min-height: min(520px, 100%);
+    max-height: 100%;
+    padding-top: 8px;
+    transition: top 0.5s ease-in-out;
+  }
+
+  &__draggable {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    row-gap: 16px;
+    padding: 16px;
+    border-radius: 16px 16px 0 0;
+    background-color: #ffffff;
+  }
+
+  &__swipe-line {
+    position: absolute;
+    top: 4px;
+    left: calc(50% - 57px);
+    width: 114px;
+    height: 4px;
+    background-color: #E7E7E7;
+    border-radius: 2px;
+  }
+
+  form {
+    position: relative;
+    z-index: 0;
+
+    &>h6 {
+      font-size: 25px;
+      color: #6f1717;
+      font-weight: 300;
+      margin: 0;
+      margin-top: 10px;
+      position: relative;
+      top: 30px;
+    }
+  }
+
+  details {
+    summary {
+      font-size: 18px;
+      font-weight: 300;
+      text-decoration: underline;
+      outline: none;
+      cursor: pointer;
+      list-style-type: none;
+      margin-bottom: 10px;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::after {
+        content: "";
+        display: inline-block;
+        height: 0px;
+        width: 0px;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        margin-left: 10px;
+      }
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    &[open] {
+      summary::after {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}

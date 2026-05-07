@@ -1,0 +1,207 @@
+$height: 80px;
+$red: #FF2400;
+
+.header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  border-radius: 0 0 16px 16px;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  background: #FFFFFF;
+
+  .api {
+    margin-right: 15px;
+
+    @media (max-width: 768px) {
+      margin-right: 0;
+    }
+  }
+
+  h2,
+  .api {
+    font-weight: 500;
+    font-size: 24px;
+    color: #FFF8F8;
+    text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.33);
+
+    @media (max-width: 768px) {
+      font-size: 18px;
+    }
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #999999;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
+
+  .column {
+    display: flex;
+    align-items: center;
+
+    .menu-icon {
+      background-color: red;
+      border-radius: 4px;
+    }
+  }
+
+  .menu {
+    $b: ".menu";
+
+    &__wrapper {
+      cursor: pointer;
+      padding: 5px;
+      position: relative;
+      height: $height;
+      display: flex;
+      align-items: center;
+    }
+
+    &__list {
+      list-style-type: none;
+      transition: .2s;
+      opacity: 0;
+      transform: scale(0);
+      transform-origin: top left;
+      max-height: 0;
+      margin: 0;
+      position: absolute;
+      top: $height;
+      left: 0;
+      background-color: #fff;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+      border-top-right-radius: 15px;
+      padding: 0;
+      box-shadow: 0 0 5px darken(#fff, 50);
+      z-index: 1;
+
+      &--active {
+        opacity: 1;
+        transform: scale(1);
+        max-height: 500px;
+      }
+    }
+
+    &__item {
+      position: relative;
+
+      &:first-child {
+        #{$b}__button {
+          border-top-right-radius: 15px;
+        }
+      }
+
+      &:last-child {
+        #{$b}__button {
+          border-radius: 0 0 15px 15px
+        }
+      }
+    }
+
+    &__button {
+      background-color: transparent;
+      border: none;
+      padding: 10px 20px;
+      width: 250px;
+      transition: .2s;
+      text-align-last: left;
+      position: relative;
+
+      &:hover,
+      &:focus,
+      &:active {
+        background-color: darken(#fff, 5);
+      }
+    }
+
+    &__languages {
+      display: flex;
+      flex-direction: column;
+      padding: 5px 0;
+      background: #FFFFFF;
+      border: 1px solid #858585;
+      border-radius: 5px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin-right: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1;
+    }
+
+    &__language-flag {
+      display: flex;
+      align-items: center;
+      padding: 3px 5px;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    &__language-flag-icon {
+      width: 24px;
+      height: 16px;
+    }
+
+    &__language-flag-text {
+      margin-left: 5px;
+
+      &:only-child {
+        margin-left: 29px;
+      }
+    }
+  }
+}
+
+.vote-button {
+  border: none;
+  background-color: transparent;
+  height: 32px;
+  width: 32px;
+  border-radius: 8px;
+  background-color: $red;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.burger-wrapper {
+  display: flex;
+  column-gap: 8px;
+  align-items: center;
+  height: 32px;
+}
+
+.header-avatar-wrapper {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+  height: 32px;
+}
+
+.header-user-name,
+.header-user-lng {
+  color: #BDBDBD;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.header-logo {
+  position: absolute;
+  left: calc(50% - 30px);
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+}
