@@ -115,10 +115,8 @@ function* googleLoginSaga(data: TAction) {
       return
     }
 
-    if (result.user?.u_role === EUserRoles.Driver)
-      window.location.replace('/driver-order')
-    else
-      window.location.replace('/passenger-order')
+    // Default to passenger when OAuth did not provide explicit module state.
+    window.location.replace('/passenger-order')
   } catch (error) {
     console.error(error)
     yield put({ type: ActionTypes.GOOGLE_LOGIN_FAIL })
@@ -255,6 +253,18 @@ function* initUserSaga() {
       }
     }
     yield put(setUser(user))
+
+    // Safety-net for OAuth callbacks: if backend redirects user to a wrong
+    // module path, enforce the module that was requested before OAuth.
+    const redirectPath = localStorage.getItem('state.auth.redirectPath')
+    if (redirectPath) {
+      localStorage.removeItem('state.auth.redirectPath')
+      localStorage.removeItem('state.auth.redirectModule')
+      if (window.location.pathname !== redirectPath) {
+        window.location.replace(redirectPath)
+        return
+      }
+    }
   } catch (error) {
     console.error('Error in initUserSaga:', error)
     localStorage.removeItem('state.user.tokens')
