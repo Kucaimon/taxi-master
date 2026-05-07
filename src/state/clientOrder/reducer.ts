@@ -209,11 +209,16 @@ export default function reducer(
       return state
         .set('carClass', defaultRecord.carClass)
         .set('seats', defaultRecord.seats)
+        .set('from', defaultRecord.from)
+        .set('fromPolygons', defaultRecord.fromPolygons)
+        .set('fromLoading', false)
         .set('to', defaultRecord.to)
         .set('toPolygons', defaultRecord.toPolygons)
+        .set('toLoading', false)
         .set('comments', defaultRecord.comments)
         .set('time', defaultRecord.time)
         .set('customerPrice', defaultRecord.customerPrice)
+        .set('selectedOrder', defaultRecord.selectedOrder)
     default:
       return state
   }

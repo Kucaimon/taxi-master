@@ -21,6 +21,7 @@ import {
 import { uploadRegisterFiles, uploadFiles } from './helpers'
 import { ActionTypes } from './constants'
 import { setUser } from './actionCreators'
+import { ActionTypes as ClientOrderActionTypes } from '../clientOrder/constants'
 
 export const saga = function* () {
   yield all([
@@ -196,10 +197,11 @@ function* logoutSaga() {
   try {
     localStorage.removeItem('state.user.user')
     localStorage.removeItem('state.user.tokens')
+    yield put(clearOrders())
+    yield put({ type: ClientOrderActionTypes.RESET })
 
     yield* call(API.logout)
     yield put({ type: ActionTypes.LOGOUT_SUCCESS })
-    yield put(clearOrders())
   } catch (error) {
     console.error(error)
     yield put({ type: ActionTypes.LOGOUT_FAIL })

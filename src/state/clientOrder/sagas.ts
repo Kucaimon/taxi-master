@@ -89,6 +89,7 @@ function resetSaga() {
   const keys = [
     'carClass',
     'seats',
+    'from',
     'to',
     'comments',
     'time',
