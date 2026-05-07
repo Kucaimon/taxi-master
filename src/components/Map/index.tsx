@@ -143,31 +143,41 @@ function MapContent({
     driverLongitude !== null
 
   useEffect(() => {
-    if (isOpen) {
-      API.getWashTrips()
-        .then(items => items.filter(item =>
-          // @ts-ignore
-          item.t_start_latitude && item.t_start_latitude === item.t_destination_latitude &&
-          // @ts-ignore
-          item.t_start_datetime?.format && item.t_complete_datetime?.format &&
-          // @ts-ignore
-          item.t_complete_datetime.isAfter(Date.now()),
-        ))
-        .then(items => {
-          // @ts-ignore
-          const markers = items.map(item => ({
-            // @ts-ignore
-            latitude: item.t_start_latitude,
-            // @ts-ignore
-            longitude: item.t_start_longitude,
-            // @ts-ignore
-            popup: `from ${item.t_start_datetime.format('HH:mm MM-DD')} to ${item.t_complete_datetime.format('HH:mm MM-DD')}`,
-            // @ts-ignore
-            tooltip: `until ${item.t_complete_datetime.format('HH:mm MM-DD')}`,
-          }))
-          setStaticMarkers(markers)
-        })
+    if (!isOpen) return
+    // The /trip endpoint returns "wash" records with a different shape
+    // than IOrder (t_* prefix instead of b_*). API.getWashTrips() is typed
+    // as IOrder[], so we narrow at runtime via duck typing and a single
+    // `unknown` cast at the boundary.
+    interface IWashTrip {
+      t_start_latitude: number
+      t_start_longitude: number
+      t_destination_latitude: number
+      t_start_datetime?: { format: (fmt: string) => string }
+      t_complete_datetime?: {
+        format: (fmt: string) => string
+        isAfter: (date: number | Date) => boolean
+      }
     }
+    API.getWashTrips()
+      .then(rawItems => {
+        const trips = (rawItems as unknown) as IWashTrip[]
+        return trips.filter(item =>
+          !!item.t_start_latitude &&
+          item.t_start_latitude === item.t_destination_latitude &&
+          !!item.t_start_datetime &&
+          !!item.t_complete_datetime &&
+          item.t_complete_datetime.isAfter(Date.now()),
+        )
+      })
+      .then(items => {
+        const markers: IStaticMarker[] = items.map(item => ({
+          latitude: item.t_start_latitude,
+          longitude: item.t_start_longitude,
+          popup: `from ${item.t_start_datetime!.format('HH:mm MM-DD')} to ${item.t_complete_datetime!.format('HH:mm MM-DD')}`,
+          tooltip: `until ${item.t_complete_datetime!.format('HH:mm MM-DD')}`,
+        }))
+        setStaticMarkers(markers)
+      })
   }, [isOpen])
 
   useEffect(() => {

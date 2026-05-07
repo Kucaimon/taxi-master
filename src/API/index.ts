@@ -426,8 +426,12 @@ export const getPointSuggestions = async(targetString?: string, isIntercity?: bo
 // (chat.itest24.com) renews its TLS certificate. The current cert is
 // expired (ERR_CERT_DATE_INVALID), so every browser blocks the request
 // and the periodic poll just spams the console with errors. Flip the
-// flag back to true once the cert is fixed.
+// flag back to true once the cert is fixed; consumers should also hide
+// chat UI based on `isChatEnabled()` so users do not see a button that
+// silently does nothing.
 const ENABLE_CHAT_SERVER = false
+
+export const isChatEnabled = (): boolean => ENABLE_CHAT_SERVER
 
 export const activateChatServer = () => {
   if (!ENABLE_CHAT_SERVER) return Promise.resolve()

@@ -16,6 +16,7 @@ import {
   OAUTH_RETURN_PATH_COOKIE,
   setShortLivedCookie,
 } from '../../../utils/cookies'
+import { setRedirectTarget } from '../../../utils/storage'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import Alert from '../../Alert/Alert'
@@ -322,8 +323,7 @@ const LoginForm: React.FC<IProps> = ({
             // Persist desired return module before full-page OAuth redirect.
             const path =
               googleState === 'driver' ? '/driver-order' : '/passenger-order'
-            localStorage.setItem('state.auth.redirectModule', googleState)
-            localStorage.setItem('state.auth.redirectPath', path)
+            setRedirectTarget(googleState, path)
             deleteCookie(OAUTH_RETURN_PATH_COOKIE)
             setShortLivedCookie(
               OAUTH_RETURN_PATH_COOKIE,

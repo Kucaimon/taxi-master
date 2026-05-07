@@ -67,6 +67,7 @@ $formContainerTop: -40px - 8px - 16px;
     }
 
     &__draggable {
+      max-height: calc(100vh - 160px - env(safe-area-inset-bottom, 0px));
       max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
       padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       overscroll-behavior: contain;

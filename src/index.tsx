@@ -13,19 +13,26 @@ import store from './state'
 import App from './App'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
+import version from './version.json'
 
 import * as serviceWorker from './serviceWorker'
 
-if(process.env.NODE_ENV === 'production') {
+// Sentry is enabled in production only. `release` is tied to the bundle
+// version so issues can be matched to a specific deploy; we keep the
+// trace sample low because the API does aggressive polling and otherwise
+// floods the Sentry quota.
+if (process.env.NODE_ENV === 'production') {
   Sentry.init({
     dsn: 'https://8181d1719b4f41e0b4f6c2c8c449e0f7@o1155911.ingest.sentry.io/6236737',
+    release: `${version.name}@${version.version}`,
+    environment: 'production',
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.captureConsoleIntegration({
         levels: ['error'],
       }),
     ],
-    tracesSampleRate: 1.0,
+    tracesSampleRate: 0.1,
   })
 }
 

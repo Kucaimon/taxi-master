@@ -7,6 +7,10 @@
 body {
   background: #fffbf4;
   margin: 0;
+  // 100vh first so old Android WebView (< 108) keeps the full-height
+  // layout instead of collapsing to 0; modern browsers override with
+  // dynamic viewport units.
+  height: 100vh;
   height: 100dvh;
   overflow: hidden;
   font-size: 16px;

@@ -53,7 +53,7 @@ const AppRoutes = ({ user }: {user: IUser | null}) => (
             [
               EUserRoles.Client,
               EUserRoles.Agent,
-            ].includes(user?.u_role as any) ?
+            ].includes(user?.u_role as EUserRoles) ?
               '/passenger-order' :
               user?.u_role === EUserRoles.Driver ?
                 '/driver-order' :

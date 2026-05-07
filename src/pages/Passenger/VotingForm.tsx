@@ -173,10 +173,11 @@ const VotingForm = function VotingForm({
       resetClientOrder()
       onSubmit(data)
     } catch (error) {
-      setSubmitError(
-        (error as any)?.message?.toString() ||
-        t(TRANSLATION.ERROR),
-      )
+      const message =
+        error instanceof Error ?
+          error.message :
+          typeof error === 'string' ? error : ''
+      setSubmitError(message || t(TRANSLATION.ERROR))
       console.error(error)
     }
     setSubmitting(false)

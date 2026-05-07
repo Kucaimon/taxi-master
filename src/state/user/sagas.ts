@@ -1,4 +1,5 @@
 import { all, takeEvery, put } from 'redux-saga/effects'
+import * as Sentry from '@sentry/react'
 import { TAction } from '../../types'
 import { EStatuses, EUserRoles, ITokens } from '../../types/types'
 import {
@@ -9,6 +10,16 @@ import {
   setShortLivedCookie,
 } from '../../utils/cookies'
 import { call, putResolve } from '../../tools/sagaUtils'
+import {
+  clearRedirectTarget,
+  clearStoredTokens,
+  clearStoredUser,
+  getRedirectModule,
+  getRedirectPath,
+  getStoredTokens,
+  setRedirectTarget,
+  setStoredTokens,
+} from '../../utils/storage'
 import SITE_CONSTANTS from '../../siteConstants'
 import * as API from '../../API'
 import { t, TRANSLATION } from '../../localization'
@@ -65,7 +76,7 @@ function* loginSaga(data: TAction) {
 
     if (result.user === null) throw new Error('wrong login response')
 
-    localStorage.setItem('state.user.tokens', JSON.stringify(result.tokens))
+    setStoredTokens(result.tokens)
 
 
     if(result.user.u_role === EUserRoles.Client || result.user.u_role === EUserRoles.Agent) {
@@ -95,7 +106,7 @@ function* googleLoginSaga(data: TAction) {
     const result = yield* call(API.googleLogin, data.payload)
 
     if (!result) throw new Error('Wrong login response')
-    localStorage.setItem('state.user.tokens', JSON.stringify(result.tokens))
+    setStoredTokens(result.tokens)
 
     yield put({
       type: ActionTypes.GOOGLE_LOGIN_SUCCESS,
@@ -104,8 +115,8 @@ function* googleLoginSaga(data: TAction) {
     yield put(setLoginModal(false))
     yield put(setRefCodeModal({ isOpen: false }))
 
-    const redirectModule = localStorage.getItem('state.auth.redirectModule')
-    let redirectPath = localStorage.getItem('state.auth.redirectPath')
+    const redirectModule = getRedirectModule()
+    let redirectPath = getRedirectPath()
     const cookiePath = getCookie(OAUTH_RETURN_PATH_COOKIE)
     if (!redirectPath && cookiePath) {
       try {
@@ -114,8 +125,7 @@ function* googleLoginSaga(data: TAction) {
         redirectPath = cookiePath
       }
     }
-    localStorage.removeItem('state.auth.redirectModule')
-    localStorage.removeItem('state.auth.redirectPath')
+    clearRedirectTarget()
     deleteCookie(OAUTH_RETURN_PATH_COOKIE)
 
     if (redirectPath) {
@@ -154,7 +164,7 @@ function* registerSaga(data: TAction) {
       token: response.token,
       u_hash: response.u_hash,
     }
-    localStorage.setItem('state.user.tokens', JSON.stringify(tokens))
+    setStoredTokens(tokens)
 
     if (data.payload?.u_role === 2) {
       if (uploads) {
@@ -195,13 +205,18 @@ function* registerSaga(data: TAction) {
 function* logoutSaga() {
   yield put({ type: ActionTypes.LOGOUT_START })
   try {
-    localStorage.removeItem('state.user.user')
-    localStorage.removeItem('state.user.tokens')
+    clearStoredUser()
+    clearStoredTokens()
     yield put(clearOrders())
     yield put({ type: ClientOrderActionTypes.RESET })
 
     yield* call(API.logout)
     yield put({ type: ActionTypes.LOGOUT_SUCCESS })
+    try {
+      Sentry.setUser(null)
+    } catch {
+      // Sentry may not be initialised in dev; ignore.
+    }
   } catch (error) {
     console.error(error)
     yield put({ type: ActionTypes.LOGOUT_FAIL })
@@ -220,8 +235,8 @@ function* remindPasswordSaga(data: TAction) {
 
 function* initUserSaga() {
   try {
-    const rawTokens = localStorage.getItem('state.user.tokens')
-    const tokens: ITokens = rawTokens !== null ? JSON.parse(rawTokens) : {}
+    const stored = getStoredTokens()
+    const tokens: ITokens = (stored ?? {}) as ITokens
     if (!tokens.token || !tokens.u_hash) {
       // Проверяем язык в куках
       const savedLang = getCookie('user_lang')
@@ -240,7 +255,7 @@ function* initUserSaga() {
 
     const user = yield* call(API.getAuthorizedUser)
     if (!user) {
-      localStorage.removeItem('state.user.tokens')
+      clearStoredTokens()
       return
     }
 
@@ -270,10 +285,19 @@ function* initUserSaga() {
       }
     }
     yield put(setUser(user))
+    try {
+      // Sentry context: id + role only (no PII like phone/email).
+      Sentry.setUser({
+        id: user.u_id ? String(user.u_id) : undefined,
+        username: user.u_role !== undefined ? `role-${user.u_role}` : undefined,
+      })
+    } catch {
+      // Sentry may not be initialised in dev; ignore.
+    }
 
     // Safety-net for OAuth callbacks: if backend redirects user to a wrong
     // module path, enforce the module that was requested before OAuth.
-    let redirectPath = localStorage.getItem('state.auth.redirectPath')
+    let redirectPath = getRedirectPath()
     const cookiePath = getCookie(OAUTH_RETURN_PATH_COOKIE)
     if (!redirectPath && cookiePath) {
       try {
@@ -283,8 +307,7 @@ function* initUserSaga() {
       }
     }
     if (redirectPath) {
-      localStorage.removeItem('state.auth.redirectPath')
-      localStorage.removeItem('state.auth.redirectModule')
+      clearRedirectTarget()
       deleteCookie(OAUTH_RETURN_PATH_COOKIE)
       if (window.location.pathname !== redirectPath) {
         window.location.replace(redirectPath)
@@ -293,7 +316,7 @@ function* initUserSaga() {
     }
   } catch (error) {
     console.error('Error in initUserSaga:', error)
-    localStorage.removeItem('state.user.tokens')
+    clearStoredTokens()
   }
 }
 
@@ -326,8 +349,7 @@ function* handleRedirectSaga() {
   const state = params.get('state')
   if (state === 'passenger' || state === 'driver') {
     const path = state === 'driver' ? '/driver-order' : '/passenger-order'
-    localStorage.setItem('state.auth.redirectModule', state)
-    localStorage.setItem('state.auth.redirectPath', path)
+    setRedirectTarget(state, path)
     deleteCookie(OAUTH_RETURN_PATH_COOKIE)
     setShortLivedCookie(OAUTH_RETURN_PATH_COOKIE, path, 600)
   }

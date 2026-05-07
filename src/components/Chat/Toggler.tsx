@@ -8,6 +8,7 @@ import { modalsActionCreators, modalsSelectors } from '../../state/modals'
 import { userSelectors } from '../../state/user'
 import images from '../../constants/images'
 import { t, TRANSLATION } from '../../localization'
+import { isChatEnabled } from '../../API'
 
 const mapStateToProps = (state: IRootState) => ({
   user: userSelectors.user(state),
@@ -39,6 +40,12 @@ const Toggler: React.FC<IProps> = ({
   const from = `${user?.u_id}_${orderID}`
   const to = `${anotherUserID}_${orderID}`
   const chatID = `${from};${to}`
+
+  // Hide the chat toggler entirely while the chat backend is unreachable
+  // (expired TLS cert on chat.itest24.com). Otherwise users tap a button
+  // that silently does nothing. Phone-call fallback is provided by
+  // `phone-link` in the order detail screen.
+  if (!isChatEnabled()) return null
 
   const handleClick: React.MouseEventHandler = (e) => {
     e.stopPropagation()
