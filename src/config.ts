@@ -12,7 +12,7 @@ const removePreloader = () => {
   if (el) el.classList.remove('active')
 }
 
-const HARD_CONFIG_TIMEOUT_MS = 8000
+const HARD_CONFIG_TIMEOUT_MS = 30000
 
 const startHardTimeout = () => {
   setTimeout(() => {
