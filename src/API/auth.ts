@@ -7,7 +7,11 @@ import { ERegistrationType } from '../state/user/constants'
 
 const _register = (
   { formData }: IApiMethodArguments,
-  data: Partial<IUser>,
+  data: Partial<IUser> & {
+    password?: string
+    password_repeat?: string
+    u_pass?: string
+  },
 ): Promise<{
   u_id: IUser['u_id'],
   email_status: boolean,
