@@ -11,6 +11,11 @@ import { EStatuses, EUserRoles } from '../../../types/types'
 import { userActionCreators, userSelectors } from '../../../state/user'
 import { ERegistrationType, LOGIN_TABS_IDS } from '../../../state/user/constants'
 import { emailRegex, phoneRegex } from '../../../tools/utils'
+import {
+  deleteCookie,
+  OAUTH_RETURN_PATH_COOKIE,
+  setShortLivedCookie,
+} from '../../../utils/cookies'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import Alert from '../../Alert/Alert'
@@ -44,6 +49,8 @@ const mapDispatchToProps = {
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps)
+
+const OAUTH_RETURN_COOKIE_MAX_AGE_SEC = 600
 
 interface IFormValues {
     login: string | undefined,
@@ -313,10 +320,15 @@ const LoginForm: React.FC<IProps> = ({
           href={googleAuthHref}
           onClick={() => {
             // Persist desired return module before full-page OAuth redirect.
+            const path =
+              googleState === 'driver' ? '/driver-order' : '/passenger-order'
             localStorage.setItem('state.auth.redirectModule', googleState)
-            localStorage.setItem(
-              'state.auth.redirectPath',
-              googleState === 'driver' ? '/driver-order' : '/passenger-order',
+            localStorage.setItem('state.auth.redirectPath', path)
+            deleteCookie(OAUTH_RETURN_PATH_COOKIE)
+            setShortLivedCookie(
+              OAUTH_RETURN_PATH_COOKIE,
+              path,
+              OAUTH_RETURN_COOKIE_MAX_AGE_SEC,
             )
           }}
         >

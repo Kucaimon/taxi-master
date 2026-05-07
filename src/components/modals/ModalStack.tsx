@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import { connect, ConnectedProps } from 'react-redux'
 import { createSelector } from 'reselect'
 import { IRootState } from '../../state'
@@ -71,27 +71,25 @@ const connector = connect(mapStateToProps)
 interface IProps extends ConnectedProps<typeof connector> {}
 
 function ModalStack({ modals }: IProps) {
+  const order = useRef<React.ComponentType[]>([])
   const prevModals = useRef<typeof modals | undefined>(undefined)
-  const [stack, setStack] = useState<React.ComponentType[]>([])
 
-  useEffect(() => {
-    if (modals === prevModals.current) return
-
-    const openedNow: React.ComponentType[] = []
-    for (const [Component] of COMPONENTS)
-      if (modals.get(Component) && !prevModals.current?.get(Component))
-        openedNow.push(Component)
-
-    if (openedNow.length) {
-      setStack(prev => [
-        ...prev.filter(Component => !openedNow.includes(Component)),
-        ...openedNow,
-      ])
+  if (modals !== prevModals.current) {
+    for (const [index, [Component]] of COMPONENTS.entries()) {
+      const isOpen = !!modals.get(Component)
+      const wasOpen = !!prevModals.current?.get(Component)
+      if (isOpen && !wasOpen) {
+        order.current = order.current.filter(C => C !== Component)
+        order.current.push(Component)
+      }
+      if (!isOpen && wasOpen) {
+        order.current = order.current.filter(C => C !== Component)
+      }
     }
     prevModals.current = modals
-  }, [modals])
+  }
 
-  return stack.map(Component => {
+  return order.current.map(Component => {
     const componentIndex = COMPONENTS.findIndex(([Item]) => Item === Component)
     return <Component key={componentIndex} />
   })

@@ -7,7 +7,12 @@ import { ERegistrationType } from '../state/user/constants'
 
 const _register = (
   { formData }: IApiMethodArguments,
-  data: Partial<IUser>,
+  data: Partial<IUser> & {
+    // Backend supports explicit password on register.
+    // Keep both keys for compatibility with different server builds.
+    password?: string
+    u_password?: string
+  },
 ): Promise<{
   u_id: IUser['u_id'],
   email_status: boolean,

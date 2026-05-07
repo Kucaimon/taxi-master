@@ -1,7 +1,13 @@
 import { all, takeEvery, put } from 'redux-saga/effects'
 import { TAction } from '../../types'
 import { EStatuses, EUserRoles, ITokens } from '../../types/types'
-import { setCookie, getCookie } from '../../utils/cookies'
+import {
+  setCookie,
+  getCookie,
+  deleteCookie,
+  OAUTH_RETURN_PATH_COOKIE,
+  setShortLivedCookie,
+} from '../../utils/cookies'
 import { call, putResolve } from '../../tools/sagaUtils'
 import SITE_CONSTANTS from '../../siteConstants'
 import * as API from '../../API'
@@ -98,9 +104,18 @@ function* googleLoginSaga(data: TAction) {
     yield put(setRefCodeModal({ isOpen: false }))
 
     const redirectModule = localStorage.getItem('state.auth.redirectModule')
-    const redirectPath = localStorage.getItem('state.auth.redirectPath')
+    let redirectPath = localStorage.getItem('state.auth.redirectPath')
+    const cookiePath = getCookie(OAUTH_RETURN_PATH_COOKIE)
+    if (!redirectPath && cookiePath) {
+      try {
+        redirectPath = decodeURIComponent(cookiePath)
+      } catch {
+        redirectPath = cookiePath
+      }
+    }
     localStorage.removeItem('state.auth.redirectModule')
     localStorage.removeItem('state.auth.redirectPath')
+    deleteCookie(OAUTH_RETURN_PATH_COOKIE)
 
     if (redirectPath) {
       window.location.replace(redirectPath)
@@ -256,10 +271,19 @@ function* initUserSaga() {
 
     // Safety-net for OAuth callbacks: if backend redirects user to a wrong
     // module path, enforce the module that was requested before OAuth.
-    const redirectPath = localStorage.getItem('state.auth.redirectPath')
+    let redirectPath = localStorage.getItem('state.auth.redirectPath')
+    const cookiePath = getCookie(OAUTH_RETURN_PATH_COOKIE)
+    if (!redirectPath && cookiePath) {
+      try {
+        redirectPath = decodeURIComponent(cookiePath)
+      } catch {
+        redirectPath = cookiePath
+      }
+    }
     if (redirectPath) {
       localStorage.removeItem('state.auth.redirectPath')
       localStorage.removeItem('state.auth.redirectModule')
+      deleteCookie(OAUTH_RETURN_PATH_COOKIE)
       if (window.location.pathname !== redirectPath) {
         window.location.replace(redirectPath)
         return
@@ -299,11 +323,11 @@ function* handleRedirectSaga() {
   const authHash = params.get('auth_hash')
   const state = params.get('state')
   if (state === 'passenger' || state === 'driver') {
+    const path = state === 'driver' ? '/driver-order' : '/passenger-order'
     localStorage.setItem('state.auth.redirectModule', state)
-    localStorage.setItem(
-      'state.auth.redirectPath',
-      state === 'driver' ? '/driver-order' : '/passenger-order',
-    )
+    localStorage.setItem('state.auth.redirectPath', path)
+    deleteCookie(OAUTH_RETURN_PATH_COOKIE)
+    setShortLivedCookie(OAUTH_RETURN_PATH_COOKIE, path, 600)
   }
   if (authHash)
     yield put({

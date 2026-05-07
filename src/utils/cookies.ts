@@ -18,4 +18,17 @@ export const getCookie = (name: string): string | null => {
 
 export const deleteCookie = (name: string) => {
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-}; 
+};
+
+/** Cookie name: target path after Google OAuth (`/passenger-order` or `/driver-order`). */
+export const OAUTH_RETURN_PATH_COOKIE = 'taxi_oauth_return_path'
+
+/** Short-lived cookie for OAuth return path (mobile browsers may partition localStorage). */
+export const setShortLivedCookie = (
+  name: string,
+  value: string,
+  maxAgeSeconds: number,
+) => {
+  const safe = encodeURIComponent(value)
+  document.cookie = `${name}=${safe};path=/;max-age=${maxAgeSeconds};SameSite=Lax`
+}

@@ -46,6 +46,7 @@ interface IFormValues {
   u_name: string;
   u_phone: string;
   u_email: string;
+  password: string;
   ref_code: string;
   type: ERegistrationType;
   u_role: EUserRoles;
@@ -144,6 +145,7 @@ const RegisterForm: React.FC<IProps> = ({
       is: (type: ERegistrationType) => type === ERegistrationType.Phone,
       then: yup.string().required(t(TRANSLATION.REQUIRED_FIELD)).trim(),
     }),
+    password: yup.string().required(t(TRANSLATION.REQUIRED_FIELD)).min(6, t(TRANSLATION.REQUIRED_FIELD)),
     street: getYupSchema(yup.string().trim(), isDefaultDriver && requireFeildsMap.street),
     city: getYupSchema(yup.string().trim(), isDefaultDriver && requireFeildsMap.city),
     state: getYupSchema(yup.string().trim(), isDefaultDriver && requireFeildsMap.state),
@@ -238,6 +240,8 @@ const RegisterForm: React.FC<IProps> = ({
       u_name: data.u_name,
       u_phone: normalizedPhone,
       u_email: data.u_email,
+      password: data.password,
+      u_password: data.password,
       u_role: data.u_role || EUserRoles.Client,
       u_city: data.city,
       ref_code: data.ref_code || undefined,
@@ -361,6 +365,17 @@ const RegisterForm: React.FC<IProps> = ({
         }}
         label={t(TRANSLATION.EMAIL)}
         error={errors.u_email?.message}
+      />
+      <Input
+        inputProps={{
+          ...formRegister('password', {
+            required: t(TRANSLATION.REQUIRED_FIELD),
+          }),
+          required: true,
+          type: 'password',
+        }}
+        label={t(TRANSLATION.PASSWORD)}
+        error={errors.password?.message}
       />
 
       <Checkbox
