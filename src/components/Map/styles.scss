@@ -195,4 +195,13 @@ body.map-fullscreen-active {
     max-height: calc(60dvh - env(safe-area-inset-bottom, 0px)) !important;
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
   }
+
+  // Lift map controls (fullscreen toggle and "my location") above the
+  // pinned form by detaching them from the map's stacking context.
+  .map-container__custom-controls {
+    position: fixed !important;
+    top: calc(12px + env(safe-area-inset-top, 0px)) !important;
+    right: 12px !important;
+    z-index: 2200 !important;
+  }
 }
