@@ -18,8 +18,9 @@
       text-align: center;
       height: 100px;
       &.small {
-         height: 50px;
+         height: 44px;
       }
+      min-height: 44px;
       width: 100px;
       border-radius: 4px;
       cursor: pointer;
