@@ -139,4 +139,10 @@
       cursor: pointer;
     }
   }
+
+  @media (max-width: 768px) {
+    // Slightly smaller map on phones so the form starts higher
+    // and requires less downward scrolling.
+    height: calc(100vh - 124px);
+  }
 }
