@@ -18,6 +18,7 @@ import { IRootState } from '../../state'
 import { modalsSelectors } from '../../state/modals'
 import { EMapModalTypes } from '../../state/modals/constants'
 import { clientOrderSelectors } from '../../state/clientOrder'
+import { ordersSelectors } from '../../state/orders'
 import { orderSelectors } from '../../state/order'
 import './styles.scss'
 
@@ -28,6 +29,8 @@ const mapStateToProps = (state: IRootState) => ({
   defaultCenter: modalsSelectors.mapModalDefaultCenter(state),
   clientFrom: clientOrderSelectors.from(state),
   clientTo: clientOrderSelectors.to(state),
+  selectedOrderId: clientOrderSelectors.selectedOrder(state),
+  activeOrders: ordersSelectors.activeOrders(state),
   detailedOrderStart: orderSelectors.start(state),
   detailedOrderDestination: orderSelectors.destination(state),
   takePassengerFrom: modalsSelectors.takePassengerModalFrom(state),
@@ -78,6 +81,8 @@ function MapContent({
   defaultCenter,
   clientFrom,
   clientTo,
+  selectedOrderId,
+  activeOrders,
   detailedOrderStart,
   detailedOrderDestination,
   takePassengerFrom,
@@ -120,6 +125,21 @@ function MapContent({
       console.error('Wrong map type:', type)
       break
   }
+
+  const selectedOrder = activeOrders?.find(
+    order => order.b_id === selectedOrderId,
+  ) ?? null
+  const selectedOrderDriver = selectedOrder?.drivers?.find(
+    driver => driver.c_state > 2,
+  )
+  const driverLatitude = selectedOrderDriver?.c_latitude
+  const driverLongitude = selectedOrderDriver?.c_longitude
+  const hasDriverMarker =
+    type === EMapModalTypes.Client &&
+    driverLatitude !== undefined &&
+    driverLatitude !== null &&
+    driverLongitude !== undefined &&
+    driverLongitude !== null
 
   useEffect(() => {
     if (isOpen) {
@@ -380,6 +400,19 @@ function MapContent({
           <Popup>{t(TRANSLATION.TO)}{!!to.address && `: ${to.shortAddress || to.address}`}</Popup>
         </Marker>
       }
+      {hasDriverMarker && (
+        <Marker
+          position={[Number(driverLatitude), Number(driverLongitude)]}
+          icon={new L.Icon({
+            iconUrl: images.carIcon,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14],
+            popupAnchor: [0, -14],
+          })}
+        >
+          <Popup>{t(TRANSLATION.DRIVER)}</Popup>
+        </Marker>
+      )}
       <img
         src="https://unpkg.com/leaflet@1.6.0/dist/images/marker-icon-2x.png"
         className="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive"
