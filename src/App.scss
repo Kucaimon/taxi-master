@@ -4,6 +4,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@200..1000&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
+html {
+  font-size: 18px;
+}
+
 body {
   background: #fffbf4;
   margin: 0;
@@ -15,6 +19,7 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   box-sizing: border-box;
+  font-family: Gilroy, sans-serif;
 }
 
 a:active,
@@ -130,10 +135,10 @@ img {
   transform: translate(-50%, -50%) !important;
 }
 
-* {
-  font-size: 18px;
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  font-family: Gilroy, sans-serif;
 }
 
 *:not(b) {
