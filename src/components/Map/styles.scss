@@ -1,5 +1,5 @@
 .map-container {
-  height: calc(100vh - 100px);
+  height: calc(100dvh - 100px);
   width: 100%;
   box-shadow: 0px 30px 12px rgba(0, 0, 0, 0.04);
   flex-direction: column;
@@ -121,5 +121,11 @@
     @media screen and (min-width: 1025px) {
       display: block;
     }
+  }
+
+  @media (max-width: 768px) {
+    // Keep map prominent but leave enough room for the passenger form.
+    height: clamp(42dvh, 52dvh, 60dvh);
+    min-height: 320px;
   }
 }

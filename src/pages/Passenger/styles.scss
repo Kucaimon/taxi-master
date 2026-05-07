@@ -49,6 +49,30 @@ $formContainerTop: -40px - 8px - 16px;
     background-color: #ffffff;
   }
 
+  @media (max-width: 768px) {
+    &__form-map-container {
+      margin-top: 0;
+    }
+
+    // Show more of the form by default on phones so users
+    // don't feel like the map takes the whole screen.
+    &__form-placeholder {
+      height: 240px;
+    }
+
+    &__form-container {
+      top: -12px;
+      min-height: min(560px, 100%);
+      padding-top: 0;
+    }
+
+    &__draggable {
+      max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      overscroll-behavior: contain;
+    }
+  }
+
   &__swipe-line {
     position: absolute;
     top: 4px;
