@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import cn from 'classnames'
 import L from 'leaflet'
 import {
@@ -6,9 +6,7 @@ import {
   Marker, CircleMarker, Circle, Popup, Tooltip, Polyline,
   useMap,
 } from 'react-leaflet'
-import Fullscreen from 'react-leaflet-fullscreen-plugin'
 import { connect, ConnectedProps } from 'react-redux'
-import leafletMarkerIcon from 'leaflet/dist/images/marker-icon-2x.png'
 import { IAddressPoint, IRouteInfo, IStaticMarker } from '../../types/types'
 import { getAttribution, getTileServerUrl } from '../../tools/utils'
 import { useInterval } from '../../tools/hooks'
@@ -24,20 +22,6 @@ import { orderSelectors } from '../../state/order'
 import './styles.scss'
 
 const defaultZoom = 15
-const LAST_KNOWN_GEO_KEY = 'map:lastKnownGeoCenter'
-
-const getCachedGeoCenter = (): [number, number] | null => {
-  try {
-    const raw = localStorage.getItem(LAST_KNOWN_GEO_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as { lat?: number, lng?: number }
-    if (typeof parsed?.lat !== 'number' || typeof parsed?.lng !== 'number')
-      return null
-    return [parsed.lat, parsed.lng]
-  } catch {
-    return null
-  }
-}
 
 const mapStateToProps = (state: IRootState) => ({
   type: modalsSelectors.mapModalType(state),
@@ -68,15 +52,13 @@ function Map({
   containerClassName,
   ...props
 }: IProps) {
-  const initialCenter = defaultCenter || getCachedGeoCenter() || SITE_CONSTANTS.DEFAULT_POSITION
-
   return (
     <div
       className={cn('map-container', containerClassName, { 'map-container--active': isOpen, 'map-container--modal': isModal })}
       key={SITE_CONSTANTS.MAP_MODE}
     >
       <MapContainer
-        center={initialCenter}
+        center={defaultCenter || SITE_CONSTANTS.DEFAULT_POSITION}
         zoom={defaultZoom}
         className='map'
         attributionControl={false}
@@ -116,7 +98,7 @@ function MapContent({
     useState<number | null>(null)
   const [routeInfo, setRouteInfo] = useState<IRouteInfo | null>(null)
   const [showRouteInfo, setShowRouteInfo] = useState(false)
-  const hasCenteredOnUser = useRef(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   let from: IAddressPoint | null = null,
     to: IAddressPoint | null = null
@@ -166,37 +148,37 @@ function MapContent({
     }
   }, [isOpen])
 
-  const requestUserLocation = useCallback((shouldCenter = false) => {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const latlng = { lat: coords.latitude, lng: coords.longitude }
-        localStorage.setItem(LAST_KNOWN_GEO_KEY, JSON.stringify(latlng))
-        setUserCoordinates({
-          latitude: latlng.lat,
-          longitude: latlng.lng,
-        })
-        setUserCoordinatesAccuracy(coords.accuracy)
-        if (shouldCenter && !defaultCenter && !hasCenteredOnUser.current) {
-          map.setView(latlng)
-          hasCenteredOnUser.current = true
-        }
-      },
-      error => console.error(error),
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 15000,
-      },
-    )
-  }, [map, defaultCenter])
-
   useEffect(() => {
-    requestUserLocation(true)
-  }, [requestUserLocation])
+    if (!map) return
+
+    map.once('locationfound', (e: L.LocationEvent) => {
+      setUserCoordinates({
+        latitude: e.latlng.lat,
+        longitude: e.latlng.lng,
+      })
+      setUserCoordinatesAccuracy(e.accuracy)
+      if (!defaultCenter)
+        map.setView(e.latlng)
+    })
+    map.once('locationerror', (e: L.ErrorEvent) => console.error(e.message))
+    map.locate({
+      timeout: Infinity,
+      enableHighAccuracy: true,
+    })
+  }, [map])
 
   useInterval(() => {
-    requestUserLocation()
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setUserCoordinates({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        })
+        setUserCoordinatesAccuracy(coords.accuracy)
+      },
+      error => console.error(error),
+      { enableHighAccuracy: true },
+    )
   }, 20000)
 
   useEffect(() => {
@@ -219,13 +201,21 @@ function MapContent({
   }, [map, setCenter])
 
   useEffect(() => {
+    const onChange = () => {
+      const element = map.getContainer()
+      setIsFullscreen(document.fullscreenElement === element)
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [map])
+
+  useEffect(() => {
     setShowRouteInfo(false)
     setRouteInfo(null)
 
     if (!from?.latitude || !from?.longitude || !to?.latitude || !to?.longitude)
       return
     let changed = false
-    let hideRouteInfoTimer: ReturnType<typeof setTimeout> | null = null
 
     API.makeRoutePoints(from, to)
       .then((info) => {
@@ -233,7 +223,7 @@ function MapContent({
           return
         setRouteInfo(info)
         setShowRouteInfo(true)
-        hideRouteInfoTimer = setTimeout(() => {
+        setTimeout(() => {
           setShowRouteInfo(false)
         }, 5000)
       })
@@ -243,8 +233,6 @@ function MapContent({
 
     return () => {
       changed = true
-      if (hideRouteInfoTimer)
-        clearTimeout(hideRouteInfoTimer)
     }
   }, [from, to])
 
@@ -252,6 +240,42 @@ function MapContent({
     !!routeInfo?.time.hours && `${routeInfo?.time.hours} h`,
     !!routeInfo?.time.minutes && `${routeInfo?.time.minutes} min`,
   ].filter(part => part).join(' ')
+
+  const locateMe = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const nextCenter: [number, number] = [coords.latitude, coords.longitude]
+        setUserCoordinates({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        })
+        setUserCoordinatesAccuracy(coords.accuracy)
+        map.flyTo(nextCenter, Math.max(map.getZoom(), 16))
+      },
+      error => console.error(error),
+      { enableHighAccuracy: true },
+    )
+  }, [map])
+
+  const toggleFullscreen = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const element = map.getContainer() as any
+    const doc = document as any
+
+    if (document.fullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen()
+      else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen()
+      return
+    }
+
+    if (element.requestFullscreen) element.requestFullscreen()
+    else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen()
+  }, [map])
 
   return (
     <>
@@ -333,14 +357,59 @@ function MapContent({
         </Marker>
       }
       <img
-        src={leafletMarkerIcon}
+        src="https://unpkg.com/leaflet@1.6.0/dist/images/marker-icon-2x.png"
         className="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive"
         alt="Центр"
         tabIndex={0}
       />
-      <Fullscreen
-        position="topleft"
-      />
+      <div className="map-container__custom-controls">
+        <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+          {isFullscreen ? '⤢' : '⛶'}
+        </button>
+        <button type="button" onClick={locateMe} aria-label="My location">
+          ◎
+        </button>
+      </div>
+      {/* {!disableButtons && <div className={cn('modal-buttons',{'z-indexed': isModal})}>
+        {!!setFrom && (
+          <Button
+            className='modal-button'
+            type="button"
+            text={t(TRANSLATION.FROM)}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              handleFromClick()}}
+          />
+        )}
+        {!!setTo && (
+          <Button
+            className='modal-button'
+            text={t(TRANSLATION.TO)}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              handleToClick()
+            }}
+          />
+        )}
+        {!!(from?.latitude && from?.longitude) && !!(to?.latitude && to?.longitude) && (
+          <Button
+            className='modal-button'
+            text={t(TRANSLATION.BUILD_THE_ROUTE)}
+            onClick={handleRouteClick}
+          />
+        )}
+        <Button
+          className='modal-button'
+          skipHandler={true}
+          text={t(TRANSLATION.CLOSE)}
+          onClick={() => {
+            if (onClose) return onClose()
+            setMapModal({ ...defaultMapModal })
+          }}
+        />
+      </div>} */}
       <TileLayer
         attribution={getAttribution()}
         url={getTileServerUrl()}
