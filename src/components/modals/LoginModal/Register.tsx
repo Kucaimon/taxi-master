@@ -183,31 +183,6 @@ const RegisterForm: React.FC<IProps> = ({
     if (status === EStatuses.Fail && !isRegistrationAlertVisible) {
       toggleRegistrationAlertVisibility()
     }
-
-    // if (status === EStatuses.Success && type === ERegistrationType.Phone && shouldSendToWhatsapp) {
-    //   if (response) {
-    //     axios.post(`${WHATSAPP_BOT_URL}/send-message`,
-    //       {
-    //         phone: u_phone,
-    //         code: response.string,
-    //       },
-    //       {
-    //         headers: {
-    //           'x-api-key': WHATSAPP_BOT_KEY,
-    //         },
-    //       },
-    //     ).then((response) => {
-    //       console.log(response)
-    //       whatsappResponseMessage = response.data
-    //     }).catch((err) => {
-    //       console.log(err)
-    //       whatsappResponseMessage = err
-    //     }).finally(() => {
-    //       toggleRegistrationAlertVisibility()
-    //       toggleWhatsappAlertVisibility()
-    //     })
-    //   }
-    // }
   }, [status])
 
   useEffect(() => {

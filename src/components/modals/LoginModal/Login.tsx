@@ -281,34 +281,9 @@ const LoginForm: React.FC<IProps> = ({
       }
 
       {Number(role) !== EUserRoles.Driver && (
-        // <LoginSocialGoogle
-        //   client_id={googleClientId}
-        //   onLoginStart={() => {}}
-        //   redirect_uri={''}
-        //   scope="profile email"
-        //   access_type="online"
-        //   onResolve={(data) => {
-        //     console.log(data)
-        //   // const obj = {
-        //   //   u_name: data?.name,
-        //   //   u_phone: '',
-        //   //   u_email: 'moj14frffefff@gmail.com',          // TODO: заменить на data?.email
-        //   //   type: ERegistrationType.Email,
-        //   //   u_role: EUserRoles.Client,
-        //   //   ref_code: '',
-        //   //   u_details: {},
-        //   //   st: '1',
-        //   // }
-        //   //googleLogin(obj)
-        //   }}
-        //   onReject={err => {
-        //     console.log(err)
-        //   }}
-        // >
         <a href={`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&access_type=offline&client_id=${googleClientId}&redirect_uri=${Config.SERVER_URL}/google/&state&scope=email%20profile&prompt=select_account`}>
           <GoogleLoginButton />
         </a>
-
       )}
 
       <Button

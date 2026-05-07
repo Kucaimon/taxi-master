@@ -320,46 +320,6 @@ function MapContent({
       <Fullscreen
         position="topleft"
       />
-      {/* {!disableButtons && <div className={cn('modal-buttons',{'z-indexed': isModal})}>
-        {!!setFrom && (
-          <Button
-            className='modal-button'
-            type="button"
-            text={t(TRANSLATION.FROM)}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              handleFromClick()}}
-          />
-        )}
-        {!!setTo && (
-          <Button
-            className='modal-button'
-            text={t(TRANSLATION.TO)}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              handleToClick()
-            }}
-          />
-        )}
-        {!!(from?.latitude && from?.longitude) && !!(to?.latitude && to?.longitude) && (
-          <Button
-            className='modal-button'
-            text={t(TRANSLATION.BUILD_THE_ROUTE)}
-            onClick={handleRouteClick}
-          />
-        )}
-        <Button
-          className='modal-button'
-          skipHandler={true}
-          text={t(TRANSLATION.CLOSE)}
-          onClick={() => {
-            if (onClose) return onClose()
-            setMapModal({ ...defaultMapModal })
-          }}
-        />
-      </div>} */}
       <TileLayer
         attribution={getAttribution()}
         url={getTileServerUrl()}
