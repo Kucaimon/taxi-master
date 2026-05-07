@@ -96,6 +96,29 @@ function* googleLoginSaga(data: TAction) {
     })
     yield put(setLoginModal(false))
     yield put(setRefCodeModal({ isOpen: false }))
+
+    const redirectModule = localStorage.getItem('state.auth.redirectModule')
+    const redirectPath = localStorage.getItem('state.auth.redirectPath')
+    localStorage.removeItem('state.auth.redirectModule')
+    localStorage.removeItem('state.auth.redirectPath')
+
+    if (redirectPath) {
+      window.location.replace(redirectPath)
+      return
+    }
+    if (redirectModule === 'passenger') {
+      window.location.replace('/passenger-order')
+      return
+    }
+    if (redirectModule === 'driver') {
+      window.location.replace('/driver-order')
+      return
+    }
+
+    if (result.user?.u_role === EUserRoles.Driver)
+      window.location.replace('/driver-order')
+    else
+      window.location.replace('/passenger-order')
   } catch (error) {
     console.error(error)
     yield put({ type: ActionTypes.GOOGLE_LOGIN_FAIL })
@@ -222,6 +245,7 @@ function* initUserSaga() {
       const savedLang = getCookie('user_lang')
       if (savedLang) {
         const language = SITE_CONSTANTS.LANGUAGES.find(i => i.iso === savedLang)
+        console.log('Found language from cookie:', language)
         if (language) {
           yield put({
             type: ConfigActionTypes.SET_LANGUAGE,
@@ -244,6 +268,7 @@ function* whatsappSignUpSaga(data: TAction) {
 
     yield put(setRefCodeModal({ isOpen: false }))
     yield put({ type: ActionTypes.WHATSAPP_SIGNUP_SUCCESS, payload: result })
+    console.log('запускаем loginSaga')
     yield* call(loginSaga, {
       type: ActionTypes.LOGIN_REQUEST,
       payload: {
@@ -262,6 +287,14 @@ function* whatsappSignUpSaga(data: TAction) {
 function* handleRedirectSaga() {
   const params = new URLSearchParams(window.location.search)
   const authHash = params.get('auth_hash')
+  const state = params.get('state')
+  if (state === 'passenger' || state === 'driver') {
+    localStorage.setItem('state.auth.redirectModule', state)
+    localStorage.setItem(
+      'state.auth.redirectPath',
+      state === 'driver' ? '/driver-order' : '/passenger-order',
+    )
+  }
   if (authHash)
     yield put({
       type: ActionTypes.GOOGLE_LOGIN_REQUEST,

@@ -83,6 +83,8 @@ const LoginForm: React.FC<IProps> = ({
   const role = !location.pathname.includes('/driver-order') ?
     EUserRoles.Client :
     EUserRoles.Driver
+  const googleState = Number(role) === EUserRoles.Driver ? 'driver' : 'passenger'
+  const googleAuthHref = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&access_type=offline&client_id=${googleClientId}&redirect_uri=${Config.SERVER_URL}/google/&state=${googleState}&scope=email%20profile&prompt=select_account`
 
   const schema = yup.object({
     type: yup.string().required(),
@@ -160,6 +162,7 @@ const LoginForm: React.FC<IProps> = ({
       (status === EStatuses.Fail || status === EStatuses.Success && user) &&
       type !== ERegistrationType.Whatsapp && !isVisible
     ) {
+      console.log('togglin, prev: ', isVisible)
       toggleVisibility()
     } else if (status === EStatuses.Whatsapp) {
       setLoginModal(false)
@@ -182,6 +185,7 @@ const LoginForm: React.FC<IProps> = ({
   if (tab !== LOGIN_TABS_IDS[0]) return null
 
   const onSubmit = (data: IFormValues) => {
+    console.log(status, user)
     if (isVisible) toggleVisibility()
     setDataToLogin(data)
     if (user) {
@@ -241,9 +245,7 @@ const LoginForm: React.FC<IProps> = ({
                       className: 'restore-password-block__button',
                       type: 'button',
                       onClick: () => {
-                        formLogin &&
-                          window.confirm(t(TRANSLATION.PASSWORD_RESET_MESSAGE)) &&
-                          remindPassword(formLogin)
+                        formLogin && window.confirm(t(TRANSLATION.PASSWORD_RESET_MESSAGE)) && remindPassword(formLogin)
                       },
                       disabled: !formLogin || !!errors?.login,
                       text: t(TRANSLATION.RESTORE_PASSWORD),
@@ -283,9 +285,44 @@ const LoginForm: React.FC<IProps> = ({
       }
 
       {Number(role) !== EUserRoles.Driver && (
-        <a href={`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&access_type=offline&client_id=${googleClientId}&redirect_uri=${Config.SERVER_URL}/google/&state&scope=email%20profile&prompt=select_account`}>
+        // <LoginSocialGoogle
+        //   client_id={googleClientId}
+        //   onLoginStart={() => {}}
+        //   redirect_uri={''}
+        //   scope="profile email"
+        //   access_type="online"
+        //   onResolve={(data) => {
+        //     console.log(data)
+        //   // const obj = {
+        //   //   u_name: data?.name,
+        //   //   u_phone: '',
+        //   //   u_email: 'moj14frffefff@gmail.com',          // TODO: заменить на data?.email
+        //   //   type: ERegistrationType.Email,
+        //   //   u_role: EUserRoles.Client,
+        //   //   ref_code: '',
+        //   //   u_details: {},
+        //   //   st: '1',
+        //   // }
+        //   //googleLogin(obj)
+        //   }}
+        //   onReject={err => {
+        //     console.log(err)
+        //   }}
+        // >
+        <a
+          href={googleAuthHref}
+          onClick={() => {
+            // Persist desired return module before full-page OAuth redirect.
+            localStorage.setItem('state.auth.redirectModule', googleState)
+            localStorage.setItem(
+              'state.auth.redirectPath',
+              googleState === 'driver' ? '/driver-order' : '/passenger-order',
+            )
+          }}
+        >
           <GoogleLoginButton />
         </a>
+
       )}
 
       <Button
