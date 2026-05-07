@@ -99,6 +99,7 @@ function MapContent({
   const [routeInfo, setRouteInfo] = useState<IRouteInfo | null>(null)
   const [showRouteInfo, setShowRouteInfo] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false)
 
   let from: IAddressPoint | null = null,
     to: IAddressPoint | null = null
@@ -203,11 +204,23 @@ function MapContent({
   useEffect(() => {
     const onChange = () => {
       const element = map.getContainer()
-      setIsFullscreen(document.fullscreenElement === element)
+      setIsFullscreen(document.fullscreenElement === element || isPseudoFullscreen)
     }
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [map])
+  }, [map, isPseudoFullscreen])
+
+  useEffect(() => {
+    const host = map.getContainer().closest('.map-container')
+    if (!host) return
+    host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
+    document.body.classList.toggle('map-fullscreen-active', isPseudoFullscreen)
+    map.invalidateSize()
+    return () => {
+      host.classList.remove('map-container--pseudo-fullscreen')
+      document.body.classList.remove('map-fullscreen-active')
+    }
+  }, [map, isPseudoFullscreen])
 
   useEffect(() => {
     setShowRouteInfo(false)
@@ -260,12 +273,18 @@ function MapContent({
     )
   }, [map])
 
-  const toggleFullscreen = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+  const toggleFullscreen = useCallback(async(event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     event.stopPropagation()
 
     const element = map.getContainer() as any
     const doc = document as any
+
+    if (isPseudoFullscreen) {
+      setIsPseudoFullscreen(false)
+      setIsFullscreen(false)
+      return
+    }
 
     if (document.fullscreenElement) {
       if (document.exitFullscreen) document.exitFullscreen()
@@ -273,9 +292,14 @@ function MapContent({
       return
     }
 
-    if (element.requestFullscreen) element.requestFullscreen()
-    else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen()
-  }, [map])
+    try {
+      if (element.requestFullscreen) await element.requestFullscreen()
+      else if (element.webkitRequestFullscreen) await element.webkitRequestFullscreen()
+      else setIsPseudoFullscreen(true)
+    } catch (error) {
+      setIsPseudoFullscreen(true)
+    }
+  }, [map, isPseudoFullscreen])
 
   return (
     <>

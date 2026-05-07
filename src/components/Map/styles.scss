@@ -145,4 +145,17 @@
     // and requires less downward scrolling.
     height: calc(100vh - 124px);
   }
+
+  &--pseudo-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    height: 100dvh !important;
+    width: 100vw !important;
+    border-radius: 0;
+  }
+}
+
+body.map-fullscreen-active {
+  overflow: hidden;
 }
