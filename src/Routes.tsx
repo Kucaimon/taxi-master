@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useEffect } from 'react'
-import { Route, Routes, Navigate, useNavigate } from 'react-router-dom'
+import React, { Suspense, lazy } from 'react'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import {
   configSelectors,
 } from './state/config'
@@ -40,47 +40,6 @@ const UnavailableBase = () => {
       <div className="loading-frame__title">{t(TRANSLATION.DATABASE_IS_UNAVAILABLE)}</div>
     </div>
   </PageSection>
-}
-
-const HomePageRedirect = () => {
-  const navigate = useNavigate()
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/passenger-order')
-    }, 11000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <a
-        href='/passenger-order'
-        style={{
-          background: 'linear-gradient(90deg, rgb(15, 44, 118) 0%, rgb(30, 88, 235) 100%)',
-          height: 60,
-          lineHeight: '60px',
-          width: 300,
-          color: '#fff',
-          textAlign: 'center',
-          fontSize: '20px',
-          borderRadius: 10,
-        }}
-      >
-        Go to map +1
-      </a>
-    </div>
-  )
 }
 
 const AppRoutes = ({ user }: {user: IUser | null}) => (
