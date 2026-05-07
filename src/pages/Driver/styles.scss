@@ -150,6 +150,12 @@
     overflow: hidden;
   }
 
+  @media (max-width: 768px) {
+    .leaflet-control-zoom {
+      display: none !important;
+    }
+  }
+
   .no-coords-orders {
     position: absolute;
     top: 0;

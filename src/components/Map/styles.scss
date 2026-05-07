@@ -144,6 +144,11 @@
     // Slightly smaller map on phones so the form starts higher
     // and requires less downward scrolling.
     height: calc(100vh - 124px);
+
+    // Pinch-zoom is enough on touch devices; hide +/- controls.
+    .leaflet-control-zoom {
+      display: none !important;
+    }
   }
 
   &--pseudo-fullscreen {

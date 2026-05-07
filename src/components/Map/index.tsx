@@ -172,21 +172,55 @@ function MapContent({
   useEffect(() => {
     if (!map) return
 
-    map.once('locationfound', (e: L.LocationEvent) => {
-      setUserCoordinates({
-        latitude: e.latlng.lat,
-        longitude: e.latlng.lng,
-      })
-      setUserCoordinatesAccuracy(e.accuracy)
-      if (!defaultCenter)
-        map.setView(e.latlng)
-    })
-    map.once('locationerror', (e: L.ErrorEvent) => console.error(e.message))
-    map.locate({
-      timeout: Infinity,
-      enableHighAccuracy: true,
-    })
-  }, [map])
+    let cancelled = false
+
+    const applyUserCoords = (lat: number, lng: number, accuracy: number) => {
+      if (cancelled) return
+      setUserCoordinates({ latitude: lat, longitude: lng })
+      setUserCoordinatesAccuracy(accuracy)
+    }
+
+    const shouldAutoCenter = !defaultCenter
+
+    // Avoid sitting on DEFAULT_POSITION for many seconds: Leaflet locate with
+    // timeout Infinity waits for a "best" GPS fix. Use a fast cached/coarse
+    // read first, then refine with high accuracy.
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        applyUserCoords(coords.latitude, coords.longitude, coords.accuracy)
+        if (shouldAutoCenter) {
+          map.setView([coords.latitude, coords.longitude], map.getZoom(), {
+            animate: false,
+          })
+        }
+      },
+      () => {},
+      {
+        enableHighAccuracy: false,
+        maximumAge: 300_000,
+        timeout: 4_000,
+      },
+    )
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        applyUserCoords(coords.latitude, coords.longitude, coords.accuracy)
+        if (shouldAutoCenter) {
+          map.panTo([coords.latitude, coords.longitude], { animate: false })
+        }
+      },
+      e => console.error(e.message),
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 20_000,
+      },
+    )
+
+    return () => {
+      cancelled = true
+    }
+  }, [map, defaultCenter])
 
   useInterval(() => {
     navigator.geolocation.getCurrentPosition(
