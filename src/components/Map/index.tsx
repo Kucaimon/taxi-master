@@ -8,6 +8,7 @@ import {
 } from 'react-leaflet'
 import Fullscreen from 'react-leaflet-fullscreen-plugin'
 import { connect, ConnectedProps } from 'react-redux'
+import leafletMarkerIcon from 'leaflet/dist/images/marker-icon-2x.png'
 import { IAddressPoint, IRouteInfo, IStaticMarker } from '../../types/types'
 import { getAttribution, getTileServerUrl } from '../../tools/utils'
 import { useInterval } from '../../tools/hooks'
@@ -312,7 +313,7 @@ function MapContent({
         </Marker>
       }
       <img
-        src="https://unpkg.com/leaflet@1.6.0/dist/images/marker-icon-2x.png"
+        src={leafletMarkerIcon}
         className="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive"
         alt="Центр"
         tabIndex={0}
@@ -320,46 +321,6 @@ function MapContent({
       <Fullscreen
         position="topleft"
       />
-      {/* {!disableButtons && <div className={cn('modal-buttons',{'z-indexed': isModal})}>
-        {!!setFrom && (
-          <Button
-            className='modal-button'
-            type="button"
-            text={t(TRANSLATION.FROM)}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              handleFromClick()}}
-          />
-        )}
-        {!!setTo && (
-          <Button
-            className='modal-button'
-            text={t(TRANSLATION.TO)}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              handleToClick()
-            }}
-          />
-        )}
-        {!!(from?.latitude && from?.longitude) && !!(to?.latitude && to?.longitude) && (
-          <Button
-            className='modal-button'
-            text={t(TRANSLATION.BUILD_THE_ROUTE)}
-            onClick={handleRouteClick}
-          />
-        )}
-        <Button
-          className='modal-button'
-          skipHandler={true}
-          text={t(TRANSLATION.CLOSE)}
-          onClick={() => {
-            if (onClose) return onClose()
-            setMapModal({ ...defaultMapModal })
-          }}
-        />
-      </div>} */}
       <TileLayer
         attribution={getAttribution()}
         url={getTileServerUrl()}
