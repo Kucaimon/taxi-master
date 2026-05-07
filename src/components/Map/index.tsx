@@ -8,6 +8,7 @@ import {
 } from 'react-leaflet'
 import Fullscreen from 'react-leaflet-fullscreen-plugin'
 import { connect, ConnectedProps } from 'react-redux'
+import leafletMarkerIcon from 'leaflet/dist/images/marker-icon-2x.png'
 import { IAddressPoint, IRouteInfo, IStaticMarker } from '../../types/types'
 import { getAttribution, getTileServerUrl } from '../../tools/utils'
 import { useInterval } from '../../tools/hooks'
@@ -312,7 +313,7 @@ function MapContent({
         </Marker>
       }
       <img
-        src="https://unpkg.com/leaflet@1.6.0/dist/images/marker-icon-2x.png"
+        src={leafletMarkerIcon}
         className="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive"
         alt="Центр"
         tabIndex={0}
