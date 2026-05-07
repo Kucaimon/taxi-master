@@ -63,41 +63,48 @@ class Config {
   constructor() {
     let params = new URLSearchParams(window.location.search),
       configParam = params.get('config'),
-      clearConfigParam = params.get('clearConfig') !== null
+      clearConfigParam = params.get('clearConfig') !== null,
+      // Opt-in flag to also persist the chosen config across reloads.
+      // Without this flag the chosen config applies only to the current
+      // page load, which avoids the surprising "config sticks even though
+      // I opened the bare URL" behaviour.
+      persistConfigParam = params.get('persistConfig') !== null
 
     if (clearConfigParam) {
       this.clearConfig()
-    } else {
-      if (configParam) {
-        this.setConfig(configParam)
-      }
+    } else if (configParam) {
+      this.setConfig(configParam, { persist: persistConfigParam })
     }
 
-    if (!!configParam) {
-      params.delete('config')
-    }
-    if (!!clearConfigParam) {
-      params.delete('clearConfig')
-    }
+    if (configParam) params.delete('config')
+    if (clearConfigParam) params.delete('clearConfig')
+    if (persistConfigParam) params.delete('persistConfig')
 
-    if (configParam || clearConfigParam) {
+    if (configParam || clearConfigParam || persistConfigParam) {
       const _path = window.location.origin + window.location.pathname
       let _newUrl = params.toString() ?
         _path + '?' + params.toString() :
         _path
       window.history.replaceState({}, document.title, _newUrl)
-    } else {
-      let _savedConfig = this.SavedConfig
-      if (!!_savedConfig) {
-        this.setConfig(_savedConfig)
-      } else {
-        this.setDefaultName()
+    }
+
+    if (!configParam && !clearConfigParam) {
+      // One-time legacy cleanup: previous behaviour silently persisted
+      // ?config=... in localStorage and re-applied it on every bare-URL
+      // visit. Clients reported this is surprising. Drop the stored
+      // value unless persistence was explicitly opted in this session.
+      const _savedConfig = this.SavedConfig
+      if (_savedConfig) {
+        localStorage.removeItem('config')
       }
+      this.setDefaultName()
     }
   }
 
-  setConfig(name: string) {
-    localStorage.setItem('config', name)
+  setConfig(name: string, options: { persist?: boolean } = {}) {
+    if (options.persist) {
+      localStorage.setItem('config', name)
+    }
     _configName = name
     applyConfigName(this.API_URL, name)
   }
