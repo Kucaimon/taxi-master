@@ -257,10 +257,7 @@ const RegisterForm: React.FC<IProps> = ({
       })
     }
 
-    console.log('Phone number from form:', data.u_phone)
     const normalizedPhone = normalizePhoneNumber(data.u_phone, true, Number(u_role) === EUserRoles.Driver)
-    console.log('Normalized phone number:', normalizedPhone)
-    console.log('Is driver:', Number(u_role) === EUserRoles.Driver)
 
     register({
       u_name: data.u_name,

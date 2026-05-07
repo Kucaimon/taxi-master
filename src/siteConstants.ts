@@ -243,7 +243,6 @@ class Constants {
       parseCalculationBenefits,
     )
     this.LANGUAGES = parseLanguages((window as any).data?.langs || defaultValues.LANGUAGES)
-    console.log('CONSTANTS LANGUAGES', this.LANGUAGES)
   }
 
   calc_ENABLE_CUSTOMER_PRICE() {

@@ -160,7 +160,6 @@ const LoginForm: React.FC<IProps> = ({
       (status === EStatuses.Fail || status === EStatuses.Success && user) &&
       type !== ERegistrationType.Whatsapp && !isVisible
     ) {
-      console.log('togglin, prev: ', isVisible)
       toggleVisibility()
     } else if (status === EStatuses.Whatsapp) {
       setLoginModal(false)
@@ -183,7 +182,6 @@ const LoginForm: React.FC<IProps> = ({
   if (tab !== LOGIN_TABS_IDS[0]) return null
 
   const onSubmit = (data: IFormValues) => {
-    console.log(status, user)
     if (isVisible) toggleVisibility()
     setDataToLogin(data)
     if (user) {
