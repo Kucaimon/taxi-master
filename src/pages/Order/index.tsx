@@ -5,6 +5,7 @@ import PageSection from '../../components/PageSection'
 import Button from '../../components/Button'
 import Input from '../../components/Input'
 import { addHiddenOrder } from '../../tools/utils'
+import { formatAddress } from '../../tools/format'
 import * as API from '../../API'
 import { t, TRANSLATION } from '../../localization'
 import ClientInfo from '../../components/order/ClientInfo'
@@ -311,7 +312,7 @@ const Order: React.FC<IProps> = ({
               <h3>{order.b_options?.object ? `${t(TRANSLATION.PICK_UP_PACKAGE)}:` : t(TRANSLATION.ADDRESSES)}</h3>
               <div className='from'>
                 <label>
-                  {isFromAddressShort && start?.shortAddress ? start?.shortAddress : start?.address}
+                  {formatAddress(start, { short: !!isFromAddressShort, fallback: '' })}
                 </label>
                 <div className="from__buttons">
                   {start?.shortAddress && (
@@ -398,7 +399,7 @@ const Order: React.FC<IProps> = ({
               {(destination?.address || destination?.latitude || destination?.longitude) && (
                 <div className='to'>
                   <label>
-                    {isToAddressShort && destination?.shortAddress ? destination?.shortAddress : destination?.address}
+                    {formatAddress(destination, { short: !!isToAddressShort, fallback: '' })}
                   </label>
                   <div className="to__buttons">
                     {destination?.shortAddress && (

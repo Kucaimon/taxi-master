@@ -18,6 +18,7 @@ import {
   shortenAddress,
   formatCurrency,
 } from '../../tools/utils'
+import { formatAddress } from '../../tools/format'
 import { useSelector } from '../../tools/hooks'
 import {
   ordersDetailsSelectors,
@@ -137,22 +138,22 @@ function OrderCard({
             <span className="status-card__from-address">
               {t(TRANSLATION.FROM)}:
               {address ?
-                <span>{address?.shortAddress ? address?.shortAddress : address?.address}</span> :
-                order.b_start_address ? <span>{order.b_start_address}</span> : <Loader />
+                <span>{formatAddress(address, { short: true })}</span> :
+                order.b_start_address ?
+                  <span>{order.b_start_address}</span> :
+                  <Loader />
               }
-              {/* {start?.shortAddress && (
-                <img
-                  src={isFromAddressShort ? images.minusIcon : images.plusIcon}
-                  onClick={(e) => setIsFromAddressShort(prev => !prev)}
-                  alt='change address mode'
-                />
-              )} */}
 
               {t(TRANSLATION.TO)}:
               <span>
-                {order.b_destination_address ||
-                  `${order.b_destination_latitude}, ${order.b_destination_longitude}`
-                }
+                {formatAddress(
+                  {
+                    address: order.b_destination_address,
+                    latitude: order.b_destination_latitude,
+                    longitude: order.b_destination_longitude,
+                  },
+                  { withCoords: true },
+                )}
               </span>
             </span>
           </div>

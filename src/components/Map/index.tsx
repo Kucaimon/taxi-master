@@ -9,6 +9,7 @@ import {
 import { connect, ConnectedProps } from 'react-redux'
 import { IAddressPoint, IRouteInfo, IStaticMarker } from '../../types/types'
 import { getAttribution, getTileServerUrl } from '../../tools/utils'
+import { formatAddress } from '../../tools/format'
 import { useInterval } from '../../tools/hooks'
 import SITE_CONSTANTS from '../../siteConstants'
 import images from '../../constants/images'
@@ -436,7 +437,7 @@ function MapContent({
             popupAnchor: [0, -35],
           })}
         >
-          <Popup>{t(TRANSLATION.FROM)}{!!from.address && `: ${from.shortAddress || from.address}`}</Popup>
+          <Popup>{`${t(TRANSLATION.FROM)}: ${formatAddress(from, { short: true, withCoords: true })}`}</Popup>
         </Marker>
       }
       {!!to?.latitude && !!to?.longitude &&
@@ -449,7 +450,7 @@ function MapContent({
             popupAnchor: [0, -35],
           })}
         >
-          <Popup>{t(TRANSLATION.TO)}{!!to.address && `: ${to.shortAddress || to.address}`}</Popup>
+          <Popup>{`${t(TRANSLATION.TO)}: ${formatAddress(to, { short: true, withCoords: true })}`}</Popup>
         </Marker>
       }
       {hasDriverMarker && (

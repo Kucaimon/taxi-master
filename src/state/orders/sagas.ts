@@ -6,7 +6,7 @@ import SITE_CONSTANTS from '../../siteConstants'
 import {
   WatchState,
   select, call, putResolve,
-  concurrency, whileWatching,
+  concurrency, whileWatching, delayPausable,
 } from '../../tools/sagaUtils'
 import { updateCompletedOrderDuration } from '../../tools/order'
 import { geopositionToPoint } from '../../tools/maps'
@@ -101,7 +101,7 @@ function* watchActiveOrdersSaga() {
   const interval = user.u_role === EUserRoles.Driver ?
     DRIVER_ACTIVE_ORDERS_POLL_INTERVAL :
     ACTIVE_ORDERS_POLL_INTERVAL
-  yield delay(interval)
+  yield* delayPausable(interval)
 }
 
 function* watchReadyOrdersSaga() {
@@ -114,7 +114,7 @@ function* watchReadyOrdersSaga() {
     ActionTypes.GET_READY_ORDERS_SUCCESS,
     ActionTypes.GET_READY_ORDERS_FAIL,
   ])
-  yield delay(READY_ORDERS_POLL_INTERVAL)
+  yield* delayPausable(READY_ORDERS_POLL_INTERVAL)
 }
 
 function* watchHistoryOrdersSaga() {
@@ -127,7 +127,7 @@ function* watchHistoryOrdersSaga() {
     ActionTypes.GET_HISTORY_ORDERS_SUCCESS,
     ActionTypes.GET_HISTORY_ORDERS_FAIL,
   ])
-  yield delay(HISTORY_ORDERS_POLL_INTERVAL)
+  yield* delayPausable(HISTORY_ORDERS_POLL_INTERVAL)
 }
 
 function* watchOrderSaga({ key: id }: WatchState<IOrder['b_id']>) {
@@ -141,7 +141,7 @@ function* watchOrderSaga({ key: id }: WatchState<IOrder['b_id']>) {
           payload.id === id :
           false,
   )
-  yield delay(ORDER_POLL_INTERVAL)
+  yield* delayPausable(ORDER_POLL_INTERVAL)
 }
 
 function* getActiveOrdersSaga() {

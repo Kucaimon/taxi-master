@@ -8,6 +8,7 @@ import config from '../../config'
 import images from '../../constants/images'
 import SITE_CONSTANTS from '../../siteConstants'
 import { useInterval } from '../../tools/hooks'
+import { formatCity } from '../../tools/format'
 import { setCookie } from '../../utils/cookies'
 import { IRootState } from '../../state'
 import { configSelectors, configActionCreators } from '../../state/config'
@@ -122,11 +123,7 @@ function Header({
   const languages = SITE_CONSTANTS.LANGUAGES
     .filter(x => x.iso !== (config.SavedConfig !== 'children' ? ' ' : 'ru'))
 
-  const cityLabel = user?.u_city ?
-    ((window as any).data?.cities?.[user.u_city]?.[
-      language.iso ?? (window as any).data?.langs?.[(window as any).default_lang]?.iso
-    ] ?? '') :
-    ''
+  const cityLabel = formatCity(user, language)
 
   const handleLanguageChange = (lang: ILanguage) => {
     setCookie('user_lang', lang.iso)

@@ -16,6 +16,7 @@ import {
 import * as API from '../../API'
 import { useCachedState } from '../../tools/hooks'
 import { cachedOrderDataStateKey } from '../../tools/utils'
+import { formatAddress } from '../../tools/format'
 import Input, { EInputStyles } from '../Input'
 
 const mapStateToProps = (state: IRootState) => ({
@@ -92,10 +93,7 @@ function LocationInput({
           TRANSLATION.START_POINT :
           TRANSLATION.DESTINATION_POINT,
         ),
-        value: (isAddressShort && point?.shortAddress ?
-          point?.shortAddress :
-          point?.address
-        ) || '',
+        value: formatAddress(point, { short: !!isAddressShort, fallback: '' }),
         onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
           setPoint({ address: e.target.value }),
       }}

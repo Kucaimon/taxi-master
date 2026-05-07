@@ -1,5 +1,8 @@
 import 'core-js/features/object/assign'
 import 'core-js/features/object/values'
+// Side-effect: install global axios timeout + retry/backoff interceptors.
+// Must run before any module imports `axios` and triggers a request.
+import './API/http'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'

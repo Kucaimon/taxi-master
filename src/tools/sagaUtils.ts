@@ -1,9 +1,9 @@
-import { Action, Task, SagaIterator, channel } from 'redux-saga'
+import { Action, Task, SagaIterator, channel, eventChannel } from 'redux-saga'
 import {
   Tail, SagaReturnType, ActionPattern, ThunkAction,
   SelectEffect, CallEffect, PutEffect,
   select as sagaSelect, call as sagaCall, putResolve as sagaPutResolve,
-  all, race, take, takeEvery, fork, put, cancel,
+  all, race, take, takeEvery, fork, put, cancel, delay,
 } from 'redux-saga/effects'
 import { firstItem } from './utils'
 
@@ -159,6 +159,62 @@ export function* concurrency<TAction>(...sagas: IConcurrentSaga<TAction>[]) {
 export interface WatchState<TKey = unknown> {
   listeners: number
   key: TKey
+}
+
+/**
+ * Shared event channel that emits whenever the document becomes visible
+ * again or the browser regains network connectivity. Used by polling
+ * sagas to (a) suspend background work while the tab is hidden and
+ * (b) refresh immediately when the user returns or comes back online,
+ * which matches the "weak/intermittent network" requirement from the
+ * project brief.
+ */
+let _wakeChannel: ReturnType<typeof eventChannel<'visible' | 'online'>> | null =
+  null
+const getWakeChannel = () => {
+  if (_wakeChannel) return _wakeChannel
+  _wakeChannel = eventChannel<'visible' | 'online'>(emit => {
+    const onVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden) emit('visible')
+    }
+    const onOnline = () => emit('online')
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibility)
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', onOnline)
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibility)
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', onOnline)
+      }
+    }
+  })
+  return _wakeChannel
+}
+
+const isHidden = () => typeof document !== 'undefined' && document.hidden
+
+/**
+ * Polling-friendly delay:
+ * - if the tab is hidden, blocks until it becomes visible (no requests
+ *   while the user is away);
+ * - otherwise sleeps `ms` but returns early on visibility/online events
+ *   so a freshly opened tab refreshes immediately instead of waiting
+ *   out the previous interval.
+ */
+export function* delayPausable(ms: number) {
+  const ch = getWakeChannel()
+  while (isHidden()) {
+    yield take(ch)
+  }
+  yield race({
+    timeout: delay(ms),
+    wake: take(ch),
+  })
 }
 
 export function whileWatching(
