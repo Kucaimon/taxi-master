@@ -92,12 +92,40 @@ class Config {
       // One-time legacy cleanup: previous behaviour silently persisted
       // ?config=... in localStorage and re-applied it on every bare-URL
       // visit. Clients reported this is surprising. Drop the stored
-      // value unless persistence was explicitly opted in this session.
+      // value unless persistence was explicitly opted in this session,
+      // and also drop the cached order draft because it is tied to the
+      // previous config's market (currency / city / language) and shows
+      // up as a frankenstein state if it survives.
       const _savedConfig = this.SavedConfig
       if (_savedConfig) {
         localStorage.removeItem('config')
+        Config.dropOrderDraft()
       }
       this.setDefaultName()
+    }
+  }
+
+  /**
+   * Removes per-session order-draft keys that mirror config-specific
+   * data. Kept on the class because both the legacy-cleanup path above
+   * and `clearConfig()` need it.
+   */
+  static dropOrderDraft() {
+    const keys = [
+      'state.clientOrder.from',
+      'state.clientOrder.to',
+      'state.clientOrder.comments',
+      'state.clientOrder.time',
+      'state.clientOrder.phone',
+      'state.clientOrder.customerPrice',
+      'state.clientOrder.carClass',
+      'state.clientOrder.seats',
+      'state.clientOrder.locationClass',
+    ]
+    try {
+      for (const key of keys) localStorage.removeItem(key)
+    } catch {
+      // private mode / quota — best effort
     }
   }
 
@@ -111,6 +139,7 @@ class Config {
 
   clearConfig() {
     localStorage.removeItem('config')
+    Config.dropOrderDraft()
     _configName = ''
     applyConfigName(this.API_URL)
   }

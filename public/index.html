@@ -51,10 +51,38 @@
         var BUILD_KEY = "__taxi_build_id__";
         var RELOAD_GUARD_KEY = "__taxi_build_reload_once__";
 
+        // Keys whose lifetime is "this app version" rather than "this user".
+        // We wipe them on build change so a redeploy never leaves users with
+        // a frankenstein state (e.g. addresses from one config, currency
+        // from another). Auth tokens / language / saved config NAME are NOT
+        // listed here on purpose: we don't want to log everyone out on
+        // every release.
+        var STALE_DRAFT_KEYS = [
+          "state.clientOrder.from",
+          "state.clientOrder.to",
+          "state.clientOrder.comments",
+          "state.clientOrder.time",
+          "state.clientOrder.phone",
+          "state.clientOrder.customerPrice",
+          "state.clientOrder.carClass",
+          "state.clientOrder.seats",
+          "state.clientOrder.locationClass"
+        ];
+
+        function dropStaleDrafts() {
+          try {
+            for (var i = 0; i < STALE_DRAFT_KEYS.length; i++) {
+              localStorage.removeItem(STALE_DRAFT_KEYS[i]);
+            }
+          } catch (e) {}
+        }
+
         function clearRuntimeCachesAndReload(nextBuildId) {
           try {
             localStorage.setItem(BUILD_KEY, nextBuildId);
           } catch (e) {}
+
+          dropStaleDrafts();
 
           var finalizeReload = function () {
             try {
