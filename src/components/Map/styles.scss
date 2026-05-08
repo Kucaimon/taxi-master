@@ -162,9 +162,13 @@
   }
 }
 
-body.map-fullscreen-active {
-  overflow: hidden;
-
+// Shared fullscreen rules. Applied through three different selectors so
+// every code path produces the same layout:
+//   1) `body.map-fullscreen-active` — pseudo-fullscreen (no browser
+//      Fullscreen API support, e.g. iOS embedded WebViews).
+//   2) `.page-section.passenger:fullscreen` — modern native API.
+//   3) `.page-section.passenger:-webkit-full-screen` — Safari prefix.
+@mixin map-fullscreen-rules {
   // Hide chrome-style overlays only (header, the active-orders strip,
   // the placeholder spacer). Keep the bottom form ("подвал") visible
   // because fullscreen is meant to hide the browser URL bar, not the
@@ -178,7 +182,8 @@ body.map-fullscreen-active {
     display: none !important;
   }
 
-  .page-section.passenger {
+  .page-section.passenger,
+  &.page-section.passenger {
     height: 100vh !important;
     height: 100dvh !important;
   }
@@ -212,4 +217,19 @@ body.map-fullscreen-active {
     right: 12px !important;
     z-index: 2200 !important;
   }
+}
+
+body.map-fullscreen-active {
+  overflow: hidden;
+  @include map-fullscreen-rules;
+}
+
+.page-section.passenger:fullscreen {
+  background: #ffffff;
+  @include map-fullscreen-rules;
+}
+
+.page-section.passenger:-webkit-full-screen {
+  background: #ffffff;
+  @include map-fullscreen-rules;
 }

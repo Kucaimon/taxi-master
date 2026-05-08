@@ -268,8 +268,14 @@ function MapContent({
 
   useEffect(() => {
     const onChange = () => {
-      const element = map.getContainer()
-      setIsFullscreen(document.fullscreenElement === element || isPseudoFullscreen)
+      // The fullscreen target is now the surrounding `<section>`
+      // (see `toggleFullscreen` below) so that the bottom form
+      // stays visible alongside the map. Compare against any
+      // currently-fullscreened ancestor of the map container, not
+      // the map container itself.
+      const fsEl = document.fullscreenElement as Element | null
+      const inFullscreen = !!fsEl && fsEl.contains(map.getContainer())
+      setIsFullscreen(inFullscreen || isPseudoFullscreen)
     }
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
@@ -323,7 +329,20 @@ function MapContent({
     event.preventDefault()
     event.stopPropagation()
 
-    const element = map.getContainer() as any
+    // Target the closest <section.page-section> instead of the bare
+    // map container. Native fullscreen renders ONLY the requested
+    // element, so on Chrome Android / iOS Safari the bottom order
+    // form was being hidden when we fullscreened the map element
+    // alone (customer screenshot, May 8). The page section contains
+    // both the map and the form, so going fullscreen on it keeps
+    // everything visible while the browser still removes its URL
+    // bar and OS chrome. The global header sits outside this
+    // section and is hidden by the `map-fullscreen-active` CSS as
+    // before, which is the desired behaviour.
+    const mapEl = map.getContainer()
+    const target =
+      (mapEl.closest('.page-section') as HTMLElement | null) ?? mapEl
+    const element = target as any
     const doc = document as any
 
     if (isPseudoFullscreen) {
@@ -338,23 +357,23 @@ function MapContent({
       return
     }
 
+    const fellBackToPseudo = () => {
+      if (
+        !document.fullscreenElement ||
+        !(document.fullscreenElement as Element).contains(mapEl)
+      ) {
+        setIsPseudoFullscreen(true)
+        setIsFullscreen(true)
+      }
+    }
+
     try {
       if (element.requestFullscreen) {
         await element.requestFullscreen()
-        setTimeout(() => {
-          if (document.fullscreenElement !== element) {
-            setIsPseudoFullscreen(true)
-            setIsFullscreen(true)
-          }
-        }, 150)
+        setTimeout(fellBackToPseudo, 150)
       } else if (element.webkitRequestFullscreen) {
         await element.webkitRequestFullscreen()
-        setTimeout(() => {
-          if (document.fullscreenElement !== element) {
-            setIsPseudoFullscreen(true)
-            setIsFullscreen(true)
-          }
-        }, 150)
+        setTimeout(fellBackToPseudo, 150)
       } else {
         setIsPseudoFullscreen(true)
         setIsFullscreen(true)
