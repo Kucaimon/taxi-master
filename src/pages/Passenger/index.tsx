@@ -12,7 +12,7 @@ import {
 import { ordersSelectors, ordersActionCreators } from '../../state/orders'
 import { modalsActionCreators } from '../../state/modals'
 import { userSelectors } from '../../state/user'
-import MiniOrders from '../../components/MiniOrders'
+import ActiveOrdersOverlay from '../../components/ActiveOrdersOverlay'
 import Map from '../../components/Map'
 import Layout from '../../components/Layout'
 import PageSection from '../../components/PageSection'
@@ -225,9 +225,9 @@ function Passenger({
       <PageSection className="passenger" scrollable={false}>
 
         {useMemo(() =>
-          <MiniOrders
-            className="passenger__mini-orders"
-            handleOrderClick={handleOrderClick}
+          <ActiveOrdersOverlay
+            className="passenger__active-orders"
+            onOrderSelect={handleOrderClick}
           />
         , [handleOrderClick])}
 

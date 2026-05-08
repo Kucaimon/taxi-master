@@ -165,11 +165,15 @@
 body.map-fullscreen-active {
   overflow: hidden;
 
-  // Hide chrome-style overlays only (header, side mini-orders, the
-  // placeholder spacer). Keep the bottom form ("подвал") visible because
-  // fullscreen is meant to hide the browser URL bar, not the form.
+  // Hide chrome-style overlays only (header, the active-orders strip,
+  // the placeholder spacer). Keep the bottom form ("подвал") visible
+  // because fullscreen is meant to hide the browser URL bar, not the
+  // form. `passenger__mini-orders` is preserved as a fallback selector
+  // for any in-flight builds still using the old component name.
   .layout__header,
   .passenger__mini-orders,
+  .passenger__active-orders,
+  .active-orders-overlay,
   .passenger__form-placeholder {
     display: none !important;
   }

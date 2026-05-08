@@ -4,10 +4,12 @@ $formPlaceholderHeight: 208px - 16px;
 $formContainerTop: -40px - 8px - 16px;
 
 .passenger {
-  &__mini-orders {
-    position: absolute;
-    z-index: 1;
-    margin-bottom: 20px;
+  // Compatibility hook for the new ActiveOrdersOverlay. Positioning
+  // and safe-area handling now live inside the component itself; this
+  // class only exists to give callers a stable selector for tests
+  // and possible future tweaks.
+  &__active-orders {
+    // Intentionally empty.
   }
 
   &__form-map-container {
