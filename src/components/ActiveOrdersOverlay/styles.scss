@@ -67,6 +67,7 @@ $status-problem: #EB5757;    // red: error / cancellation needed
   pointer-events: auto;
   position: relative;
   display: flex;
+  flex-direction: column;
   flex: 0 0 auto;
   width: clamp(280px, 86vw, 380px);
   min-height: 72px;
@@ -86,11 +87,28 @@ $status-problem: #EB5757;    // red: error / cancellation needed
 
   @include frosted-bg;
 
-  // Subtle press affordance.
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  // Subtle press affordance + smooth max-height roll-out.
+  transition:
+    transform 120ms ease-out,
+    box-shadow 120ms ease-out,
+    max-height 240ms ease-out;
   &:active {
     transform: scale(0.985);
     box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+  }
+
+  // Expanded state: the card grows downward to reveal route + driver
+  // details and an "Open" CTA that hands off to the legacy modal.
+  // We keep `max-height` large enough that any one card with a long
+  // address still fits, but the actual visual height is driven by
+  // its content because `min-height` ramps up too.
+  &--expanded {
+    min-height: 200px;
+    // Roomy cap so long addresses don't clip; routes use a 2-line
+    // ellipsis already, so the actual rendered height stays well
+    // under this number on every typical order.
+    max-height: 50vh;
+    cursor: default;
   }
 
   // The leading vertical color bar encodes the status at a glance.
@@ -103,7 +121,10 @@ $status-problem: #EB5757;    // red: error / cancellation needed
   }
 
   &__main {
-    flex: 1 1 auto;
+    // Flex item inside a column-flex card, so this row spans the
+    // full width and constrains itself to the compact height when
+    // collapsed.
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 0;
@@ -115,6 +136,21 @@ $status-problem: #EB5757;    // red: error / cancellation needed
     color: inherit;
     font: inherit;
     min-width: 0; // allow children to ellipsis inside flex
+    min-height: 56px;
+  }
+
+  &__chevron {
+    flex: 0 0 auto;
+    margin-left: 8px;
+    margin-right: 36px; // leave room for the absolute-positioned ×
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 14px;
+    line-height: 1;
+    transition: transform 200ms ease;
+  }
+
+  &--expanded .active-order-card__chevron {
+    transform: rotate(0deg);
   }
 
   &__main:focus-visible {
@@ -194,9 +230,11 @@ $status-problem: #EB5757;    // red: error / cancellation needed
   }
 
   &__close {
-    flex: 0 0 auto;
-    align-self: flex-start;
-    margin: -2px -4px 0 8px;
+    // Pinned to the top-right corner so it doesn't shift between the
+    // compact and expanded layouts.
+    position: absolute;
+    top: 6px;
+    right: 6px;
     width: 32px;
     height: 32px;
     display: inline-flex;
@@ -209,6 +247,7 @@ $status-problem: #EB5757;    // red: error / cancellation needed
     line-height: 1;
     border-radius: 50%;
     cursor: pointer;
+    z-index: 1;
 
     &:hover {
       background: rgba(0, 0, 0, 0.06);
@@ -222,6 +261,118 @@ $status-problem: #EB5757;    // red: error / cancellation needed
 
     &:active {
       background: rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  // Expanded body. Renders below the compact row when the user taps
+  // the card. The content is plain divs (not buttons), so screen
+  // readers walk through the information naturally; only the "Open"
+  // and "×" controls are interactive.
+  &__details {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 6px 12px 12px 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    margin-top: 8px;
+    animation: active-order-card-details-enter 240ms ease-out both;
+  }
+
+  &__route {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__route-row {
+    display: grid;
+    grid-template-columns: 14px 36px 1fr;
+    align-items: start;
+    gap: 8px;
+    font-size: 13px;
+    color: #1F2937;
+    line-height: 1.35;
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 4px;
+    background: rgba(0, 0, 0, 0.4);
+
+    &--from {
+      background: $status-performer;
+    }
+    &--to {
+      background: $status-arrived;
+    }
+  }
+
+  &__route-label {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-top: 1px;
+  }
+
+  &__route-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+  }
+
+  &__driver {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  &__driver-label {
+    color: rgba(0, 0, 0, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 12px;
+  }
+
+  &__driver-value {
+    color: #1F2937;
+    font-weight: 600;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__open {
+    background: $status-performer;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 120ms ease, transform 120ms ease;
+
+    &:hover {
+      background: darken(#2F80ED, 6%);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #2F80ED;
+      outline-offset: 2px;
     }
   }
 
@@ -255,6 +406,17 @@ $status-problem: #EB5757;    // red: error / cancellation needed
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes active-order-card-details-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

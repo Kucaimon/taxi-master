@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { connect, ConnectedProps } from 'react-redux'
 import cn from 'classnames'
 import { IOrder } from '../../types/types'
@@ -32,6 +32,34 @@ function ActiveOrdersOverlay({
   setSelectedOrder,
   setCancelModal,
 }: IProps) {
+  // Single-card-at-a-time expansion: tracking it locally (not in
+  // Redux) keeps the open-state purely visual and avoids polluting
+  // global state with what is effectively transient UI affordance.
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
+
+  // If the order being expanded disappears (Finished / Cancelled /
+  // server cleanup), close the panel rather than leaving an
+  // orphaned id that would never match any rendered card again.
+  useEffect(() => {
+    if (!expandedOrderId) return
+    const stillThere = activeOrders?.some(o => o.b_id === expandedOrderId)
+    if (!stillThere)
+      setExpandedOrderId(null)
+  }, [activeOrders, expandedOrderId])
+
+  const handleToggleExpand = useCallback((order: IOrder) => {
+    setExpandedOrderId(prev => prev === order.b_id ? null : order.b_id)
+  }, [])
+
+  const handleOpenDetails = useCallback((order: IOrder) => {
+    // Match the legacy modal-flow handshake: marking the order as
+    // selected drives `Passenger/index.tsx` to call
+    // `openCurrentModal()` and route the user to the modal that
+    // matches the current driver state (vote / candidates /
+    // performer / on-the-way).
+    onOrderSelect(order)
+  }, [onOrderSelect])
+
   const handleCancel = useCallback((order: IOrder) => {
     // Open the existing CancelModal so the reason picker still gates
     // the destructive action — the new × button is only the entry
@@ -53,7 +81,9 @@ function ActiveOrdersOverlay({
           <ActiveOrderCard
             key={order.b_id}
             order={order}
-            onSelect={onOrderSelect}
+            isExpanded={expandedOrderId === order.b_id}
+            onToggleExpand={handleToggleExpand}
+            onOpenDetails={handleOpenDetails}
             onCancel={handleCancel}
           />
         ))}
