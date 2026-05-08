@@ -319,25 +319,6 @@ function MapContent({
     !!routeInfo?.time.minutes && `${routeInfo?.time.minutes} min`,
   ].filter(part => part).join(' ')
 
-  const locateMe = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
-
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const nextCenter: [number, number] = [coords.latitude, coords.longitude]
-        setUserCoordinates({
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-        })
-        setUserCoordinatesAccuracy(coords.accuracy)
-        map.flyTo(nextCenter, Math.max(map.getZoom(), 16))
-      },
-      error => console.error(error),
-      { enableHighAccuracy: true },
-    )
-  }, [map])
-
   const toggleFullscreen = useCallback(async(event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
     event.stopPropagation()
@@ -483,11 +464,12 @@ function MapContent({
         tabIndex={0}
       />
       <div className="map-container__custom-controls">
+        {/* "My location" button removed: the user blue dot is already
+            rendered on the map (see geolocation marker), the duplicate
+            button took ~7s to settle on a fix and added no real value
+            on top of the existing marker. */}
         <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
           {isFullscreen ? '⤢' : '⛶'}
-        </button>
-        <button type="button" onClick={locateMe} aria-label="My location">
-          ◎
         </button>
       </div>
       {/* {!disableButtons && <div className={cn('modal-buttons',{'z-indexed': isModal})}>
