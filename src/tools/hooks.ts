@@ -101,7 +101,26 @@ export const useWatchWithEffect = <T extends FieldValues = FieldValues>(
   return values as T
 }
 
-export const useInterval = (callback: Function, delay: number, immediately?: boolean) => {
+/**
+ * Polling hook that:
+ *  - skips ticks while the tab is hidden (no work, no network) — addresses
+ *    the "battery drain + duplicate requests on backgrounded tabs" issue
+ *    flagged in the audit;
+ *  - resumes immediately once the tab becomes visible (instead of waiting
+ *    out the previous interval);
+ *  - keeps the original `setInterval`-style call signature so existing
+ *    call sites do not need to change.
+ *
+ * Pass `pauseWhenHidden: false` to opt out (e.g. local UI countdowns that
+ * must keep ticking to stay in sync with `b_start_datetime`).
+ */
+export const useInterval = (
+  callback: Function,
+  delay: number,
+  immediately?: boolean,
+  options: { pauseWhenHidden?: boolean } = {},
+) => {
+  const { pauseWhenHidden = true } = options
   const savedCallback = useRef<Function>(undefined)
 
   useEffect(() => {
@@ -109,15 +128,55 @@ export const useInterval = (callback: Function, delay: number, immediately?: boo
   }, [callback])
 
   useEffect(() => {
-    function tick() {
+    if (delay === null) return
+
+    let id: ReturnType<typeof setInterval> | null = null
+
+    const tick = () => {
+      if (pauseWhenHidden &&
+        typeof document !== 'undefined' &&
+        document.hidden) return
       savedCallback.current && savedCallback.current()
     }
-    if (delay !== null) {
-      immediately && tick()
-      let id = setInterval(tick, delay)
-      return () => clearInterval(id)
+
+    const start = () => {
+      if (id !== null) return
+      id = setInterval(tick, delay)
     }
-  }, [delay])
+
+    const stop = () => {
+      if (id === null) return
+      clearInterval(id)
+      id = null
+    }
+
+    if (immediately) tick()
+
+    if (pauseWhenHidden && typeof document !== 'undefined' && document.hidden) {
+      // Don't even start the timer until the tab is visible.
+    } else {
+      start()
+    }
+
+    let onVisibility: (() => void) | null = null
+    if (pauseWhenHidden && typeof document !== 'undefined') {
+      onVisibility = () => {
+        if (document.hidden) {
+          stop()
+        } else {
+          tick()
+          start()
+        }
+      }
+      document.addEventListener('visibilitychange', onVisibility)
+    }
+
+    return () => {
+      stop()
+      if (onVisibility)
+        document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [delay, pauseWhenHidden])
 }
 
 export const useQuery = () => {

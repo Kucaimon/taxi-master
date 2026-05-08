@@ -44,6 +44,19 @@ export const watchOrder = (
 
 export const clearOrders = (): TAction => ({ type: ActionTypes.CLEAR })
 
+/**
+ * Manual refresh triggers used by error banners ("couldn't load, retry").
+ * They reuse the same REQUEST actions the saga dispatches in its polling
+ * loop, so a successful retry naturally clears the list-level error
+ * marker via the SUCCESS reducer branch.
+ */
+export const refetchActiveOrders = (): TAction =>
+  ({ type: ActionTypes.GET_ACTIVE_ORDERS_REQUEST })
+export const refetchReadyOrders = (): TAction =>
+  ({ type: ActionTypes.GET_READY_ORDERS_REQUEST })
+export const refetchHistoryOrders = (): TAction =>
+  ({ type: ActionTypes.GET_HISTORY_ORDERS_REQUEST })
+
 export const create = (
   ...params: Parameters<typeof API.postDrive>
 ) => async(dispatch: IDispatch) => {

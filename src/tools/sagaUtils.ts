@@ -171,7 +171,7 @@ export interface WatchState<TKey = unknown> {
  */
 let _wakeChannel: ReturnType<typeof eventChannel<'visible' | 'online'>> | null =
   null
-const getWakeChannel = () => {
+export const getWakeChannel = () => {
   if (_wakeChannel) return _wakeChannel
   _wakeChannel = eventChannel<'visible' | 'online'>(emit => {
     const onVisibility = () => {
@@ -196,7 +196,8 @@ const getWakeChannel = () => {
   return _wakeChannel
 }
 
-const isHidden = () => typeof document !== 'undefined' && document.hidden
+export const isHidden = () =>
+  typeof document !== 'undefined' && document.hidden
 
 /**
  * Polling-friendly delay:

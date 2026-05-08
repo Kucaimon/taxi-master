@@ -1,0 +1,43 @@
+// Error banner shown in place of skeleton when an order list fetch
+// failed. Visual rhythm: same outer dimensions as `.status-card` so the
+// list does not jump when the banner appears or is replaced by real
+// cards on retry.
+
+.status-card--error {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 36, 0, 0.4);
+  border-radius: 9px;
+  background: rgba(255, 36, 0, 0.04);
+  color: #5e5e5e;
+  font-size: 14px;
+  line-height: 18px;
+
+  &__title {
+    color: #ff2400;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  &__message {
+    word-break: break-word;
+  }
+
+  &__retry {
+    align-self: flex-start;
+    margin-top: 4px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: #ff2400;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 36px;
+
+    &:hover { background: darken(#ff2400, 5%); }
+    &:active { transform: translateY(1px); }
+  }
+}

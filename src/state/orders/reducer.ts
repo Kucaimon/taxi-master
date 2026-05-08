@@ -21,6 +21,25 @@ const defaultRecord: IOrdersState = {
   activeOrders: null,
   readyOrders: null,
   historyOrders: null,
+  activeOrdersError: null,
+  readyOrdersError: null,
+  historyOrdersError: null,
+}
+
+/**
+ * Error payloads coming from sagas vary: sometimes it's an `Error`, sometimes
+ * the raw API response, sometimes a string. Normalise into the small UI-shape
+ * we actually render.
+ */
+const buildListError = (payload: unknown) => {
+  let message = 'Network error'
+  if (payload instanceof Error && payload.message) message = payload.message
+  else if (typeof payload === 'string' && payload) message = payload
+  else if (payload && typeof payload === 'object') {
+    const data = (payload as { data?: { message?: string } }).data
+    if (data?.message) message = data.message
+  }
+  return { at: new Date().toISOString(), message }
 }
 
 export const ReducerRecord = ImmutableRecord<IOrdersState>(defaultRecord)
@@ -75,6 +94,17 @@ export default function(
         )
     }
 
+    case ActionTypes.GET_ACTIVE_ORDERS_FAIL:
+    case ActionTypes.GET_READY_ORDERS_FAIL:
+    case ActionTypes.GET_HISTORY_ORDERS_FAIL: {
+      const errorKey = ({
+        [ActionTypes.GET_ACTIVE_ORDERS_FAIL]: 'activeOrdersError',
+        [ActionTypes.GET_READY_ORDERS_FAIL]: 'readyOrdersError',
+        [ActionTypes.GET_HISTORY_ORDERS_FAIL]: 'historyOrdersError',
+      } as const)[type]
+      return state.set(errorKey, buildListError(payload))
+    }
+
     case ActionTypes.GET_ACTIVE_ORDERS_SUCCESS:
     case ActionTypes.GET_READY_ORDERS_SUCCESS:
     case ActionTypes.GET_HISTORY_ORDERS_SUCCESS: {
@@ -83,6 +113,14 @@ export default function(
         [ActionTypes.GET_READY_ORDERS_SUCCESS]: 'readyOrders',
         [ActionTypes.GET_HISTORY_ORDERS_SUCCESS]: 'historyOrders',
       } as const)[type]
+      const errorKey = ({
+        [ActionTypes.GET_ACTIVE_ORDERS_SUCCESS]: 'activeOrdersError',
+        [ActionTypes.GET_READY_ORDERS_SUCCESS]: 'readyOrdersError',
+        [ActionTypes.GET_HISTORY_ORDERS_SUCCESS]: 'historyOrdersError',
+      } as const)[type]
+      // Successful response clears any prior error marker on the same list
+      // so the UI returns from the "tap to retry" state to a fresh render.
+      state = state.set(errorKey, null)
 
       const toUnwatch = new Set(state[key])
       const toWatch: Record<IOrder['b_id'], number> = {}
@@ -132,6 +170,9 @@ export default function(
         'activeOrders',
         'readyOrders',
         'historyOrders',
+        'activeOrdersError',
+        'readyOrdersError',
+        'historyOrdersError',
       ]
       for (const key of keys)
         state = state.set(key, defaultRecord[key])

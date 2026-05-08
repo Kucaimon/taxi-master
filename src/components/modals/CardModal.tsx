@@ -29,6 +29,7 @@ import {
   calculateFinalPriceFormula,
   candidateMode,
 } from '../../tools/order'
+import { formatAddress } from '../../tools/format'
 import { useCachedState, useSelector } from '../../tools/hooks'
 import { t, TRANSLATION } from '../../localization'
 import { IRootState } from '../../state'
@@ -530,16 +531,25 @@ function CardModalContent({
             Departure and Arrival Address
             <span className="from_address">
               {t(TRANSLATION.FROM)}:
-              {address?.shortAddress ?
+              {address ?
                 <>
-                  <span>{isFromAddressShort ? address.shortAddress : address.address}</span>
-                  <img
-                    src={isFromAddressShort ? images.plusIcon : images.minusIcon}
-                    onClick={shortAddressHandler}
-                    alt='change address mode'
-                  />
+                  <span>
+                    {formatAddress(address, {
+                      short: isFromAddressShort,
+                      withCoords: true,
+                    })}
+                  </span>
+                  {address.shortAddress ?
+                    <img
+                      src={isFromAddressShort ? images.plusIcon : images.minusIcon}
+                      onClick={shortAddressHandler}
+                      alt='change address mode'
+                    /> :
+                    null}
                 </> :
-                order?.b_destination_address ? <span>{order?.b_start_address}</span> : <Loader />
+                order?.b_start_address ?
+                  <span>{order.b_start_address}</span> :
+                  <Loader />
               }
               <span
                 onClick={() => {
@@ -562,9 +572,16 @@ function CardModalContent({
                 />
               </span>
               {t(TRANSLATION.TO)}:
-              {destinationAddress?.shortAddress ?
-                <span>{isFromAddressShort ? destinationAddress.shortAddress : destinationAddress.address}</span> :
-                order?.b_destination_address ? <span>{order?.b_destination_address}</span> : <Loader />
+              {destinationAddress ?
+                <span>
+                  {formatAddress(destinationAddress, {
+                    short: isFromAddressShort,
+                    withCoords: true,
+                  })}
+                </span> :
+                order?.b_destination_address ?
+                  <span>{order.b_destination_address}</span> :
+                  <Loader />
               }
               <span
                 onClick={() => {

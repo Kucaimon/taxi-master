@@ -1,4 +1,5 @@
 import { shortenAddress } from './../../tools/utils'
+import { pickCityFromGeocode } from '../../tools/format'
 import { all, takeEvery, put } from 'redux-saga/effects'
 import { ActionTypes } from './constants'
 import { EPointType, IAddressPoint } from '../../types/types'
@@ -25,11 +26,7 @@ const setPointSaga = (type: EPointType) => function* (data: TAction) {
       value.address = address.display_name
       value.shortAddress = shortenAddress(
         address.display_name,
-        address.address.city ||
-        address.address.country ||
-        address.address.village ||
-        address.address.town ||
-        address.address.state,
+        pickCityFromGeocode(address) ?? '',
       )
     }
   } catch (error) {

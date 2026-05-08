@@ -5,6 +5,7 @@ import Input, { EInputTypes } from '../Input'
 import { t, TRANSLATION } from '../../localization'
 import * as API from '../../API'
 import { getPointError } from '../../tools/utils'
+import { formatAddress } from '../../tools/format'
 import images from '../../constants/images'
 import { modalsActionCreators, modalsSelectors } from '../../state/modals'
 import { IRootState } from '../../state'
@@ -148,13 +149,11 @@ const TakePassengerModal: React.FC<IProps> = ({
               <Input
                 inputProps={{
                   placeholder: t(TRANSLATION.START_POINT),
-                  value: isFromAddressShort && from?.shortAddress ?
-                    from?.shortAddress :
-                    (from?.address || (
-                      from?.latitude && from?.longitude ?
-                        `${from?.latitude}, ${from?.longitude}` :
-                        ''
-                    )),
+                  value: formatAddress(from, {
+                    short: isFromAddressShort,
+                    withCoords: true,
+                    fallback: '',
+                  }),
                   onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
                     setTakePassengerModalFrom({ address: e.target.value }),
                 }}
@@ -171,13 +170,11 @@ const TakePassengerModal: React.FC<IProps> = ({
               <Input
                 inputProps={{
                   placeholder: t(TRANSLATION.DESTINATION_POINT),
-                  value: isToAddressShort && to?.shortAddress ?
-                    to?.shortAddress :
-                    (to?.address || (
-                      to?.latitude && to?.longitude ?
-                        `${to?.latitude}, ${to?.longitude}` :
-                        ''
-                    )),
+                  value: formatAddress(to, {
+                    short: isToAddressShort,
+                    withCoords: true,
+                    fallback: '',
+                  }),
                   onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
                     setTakePassengerModalTo({ address: e.target.value }),
                 }}

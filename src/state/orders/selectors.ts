@@ -109,3 +109,10 @@ export const historyOrders = createSelector(
   pureHistoryOrders,
   (orders): IOrder[] | null => orders?.toArray() ?? null,
 )
+
+export const activeOrdersError = (state: IRootState) =>
+  moduleSelector(state).activeOrdersError
+export const readyOrdersError = (state: IRootState) =>
+  moduleSelector(state).readyOrdersError
+export const historyOrdersError = (state: IRootState) =>
+  moduleSelector(state).historyOrdersError

@@ -5,6 +5,7 @@ import * as API from '../../API'
 import {
   getCurrentPosition, shortenAddress, getPhoneNumberError,
 } from '../../tools/utils'
+import { pickCityFromGeocode } from '../../tools/format'
 import { getItem, setItem, removeItem } from '../../tools/localStorage'
 import { call, select } from '../../tools/sagaUtils'
 import { IRootState } from '..'
@@ -145,11 +146,7 @@ function* setPointSaga(action: TAction) {
             address: address.display_name,
             shortAddress: shortenAddress(
               address.display_name,
-              address.address.city ||
-              address.address.country ||
-              address.address.village ||
-              address.address.town ||
-              address.address.state,
+              pickCityFromGeocode(address) ?? '',
             ),
           }
           yield put({ type: setAction, payload: value })

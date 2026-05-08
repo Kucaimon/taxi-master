@@ -117,3 +117,43 @@ export const formatCoords = (
   if (typeof latitude !== 'number' || typeof longitude !== 'number') return ''
   return `${latitude.toFixed(digits)}, ${longitude.toFixed(digits)}`
 }
+
+/**
+ * HERE/Nominatim-style reverse-geocode payload. The geocoder returns
+ * city-level granularity under several keys depending on the country
+ * (city for big places, town/village for smaller ones, state when the
+ * place is rural). We try all of them in order of specificity. Any
+ * shape mismatches just return `undefined` — callers should treat the
+ * result as best-effort.
+ */
+interface IGeocodeAddressEnvelope {
+  address?: {
+    city?: string
+    town?: string
+    village?: string
+    country?: string
+    state?: string
+  }
+}
+
+/**
+ * Returns the best human-readable "city" label from a reverse-geocoder
+ * response. Replaces the `address.address.city || address.address.country
+ * || address.address.village || ...` chain that used to be duplicated
+ * verbatim in `clientOrder/sagas` and `modals/sagas`. Centralising the
+ * priority order means the two screens never disagree on which label to
+ * show for the same coordinates.
+ */
+export const pickCityFromGeocode = (
+  response: IGeocodeAddressEnvelope | null | undefined,
+): string | undefined => {
+  const addr = response?.address
+  if (!addr) return undefined
+  return (
+    trimOrUndefined(addr.city) ??
+    trimOrUndefined(addr.town) ??
+    trimOrUndefined(addr.village) ??
+    trimOrUndefined(addr.state) ??
+    trimOrUndefined(addr.country)
+  )
+}

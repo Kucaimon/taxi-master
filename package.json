@@ -115,15 +115,20 @@
     },
     "browserslist": {
         "production": [
-            ">0.2%",
+            ">0.5%",
             "not dead",
-            "not op_mini all"
+            "not op_mini all",
+            "Android >= 6",
+            "iOS >= 12",
+            "Chrome >= 80",
+            "Firefox >= 78",
+            "Safari >= 12",
+            "Edge >= 80"
         ],
         "development": [
             "last 1 chrome version",
             "last 1 firefox version",
-            "last 1 safari version",
-            "IE 11"
+            "last 1 safari version"
         ]
     },
     "jest": {

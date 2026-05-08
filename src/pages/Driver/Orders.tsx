@@ -11,10 +11,14 @@ import * as API from '../../API'
 import { modalsActionCreators } from '../../state/modals'
 import { userActionCreators } from '../../state/user'
 import { IUserState } from '../../state/user/constants'
+import {
+  ordersActionCreators, ordersSelectors,
+} from '../../state/orders'
 import { t, TRANSLATION } from '../../localization'
 import PageSection from '../../components/PageSection'
 import StatusCard from '../../components/Card/OrderCard'
 import OrderCardSkeleton from '../../components/Card/OrderCardSkeleton'
+import OrderListErrorBanner from '../../components/Card/OrderListErrorBanner'
 import Separator from '../../components/separator/Separator'
 import Button from '../../components/Button'
 import images from '../../constants/images'
@@ -22,14 +26,24 @@ import MiniOrder from '../../components/MiniOrder'
 import { statuses } from '../../constants/miniOrders'
 import { TABS } from '../../components/passenger-order/tabs-switcher'
 import { EDriverTabs } from '.'
+import { IRootState } from '../../state'
 import './styles.scss'
+
+const mapStateToProps = (state: IRootState) => ({
+  activeOrdersError: ordersSelectors.activeOrdersError(state),
+  readyOrdersError: ordersSelectors.readyOrdersError(state),
+  historyOrdersError: ordersSelectors.historyOrdersError(state),
+})
 
 const mapDispatchToProps = {
   setTakePassengerModal: modalsActionCreators.setTakePassengerModal,
   setUser: userActionCreators.setUser,
+  refetchActiveOrders: ordersActionCreators.refetchActiveOrders,
+  refetchReadyOrders: ordersActionCreators.refetchReadyOrders,
+  refetchHistoryOrders: ordersActionCreators.refetchHistoryOrders,
 }
 
-const connector = connect(null, mapDispatchToProps)
+const connector = connect(mapStateToProps, mapDispatchToProps)
 
 interface IProps extends ConnectedProps<typeof connector> {
   user: IUserState['user'],
@@ -46,6 +60,12 @@ const DriverOrders: React.FC<IProps> = ({
   type,
   setTakePassengerModal,
   setUser,
+  activeOrdersError,
+  readyOrdersError,
+  historyOrdersError,
+  refetchActiveOrders,
+  refetchReadyOrders,
+  refetchHistoryOrders,
 }) => {
   const [showCandidateOrders, setShowCandidateOrders] = useState(true)
   const [showReadyOrders, setShowReadyOrders] = useState(true)
@@ -101,6 +121,14 @@ const DriverOrders: React.FC<IProps> = ({
         className="driver-orders driver-orders--active"
       >
         {
+          // Order: error → skeleton → empty → list. Showing the error
+          // banner first prevents the list from oscillating between
+          // skeleton and stale data when the API repeatedly fails.
+          activeOrders === null && activeOrdersError ?
+            <OrderListErrorBanner
+              message={activeOrdersError.message}
+              onRetry={refetchActiveOrders}
+            /> :
           activeOrders === null ?
             <OrderCardSkeleton count={2} /> :
             (activeOrdersWithoutCandidates?.length && activeOrdersWithoutCandidates?.map(item => (
@@ -183,6 +211,11 @@ const DriverOrders: React.FC<IProps> = ({
           }
         </div>
         {
+          readyOrders === null && showReadyOrders && readyOrdersError ?
+            <OrderListErrorBanner
+              message={readyOrdersError.message}
+              onRetry={refetchReadyOrders}
+            /> :
           readyOrders === null && showReadyOrders ?
             <OrderCardSkeleton count={2} /> :
             readyOrders?.map(item => (
@@ -213,6 +246,11 @@ const DriverOrders: React.FC<IProps> = ({
         className={cn('driver-orders', { 'driver-orders--active': showHistoryOrders })}
       >
         {
+          historyOrders === null && showHistoryOrders && historyOrdersError ?
+            <OrderListErrorBanner
+              message={historyOrdersError.message}
+              onRetry={refetchHistoryOrders}
+            /> :
           historyOrders === null && showHistoryOrders ?
             <OrderCardSkeleton count={2} /> :
             historyOrders?.map(item => (

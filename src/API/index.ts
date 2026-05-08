@@ -27,6 +27,22 @@ import { EBookingActions } from './constants'
 import { getCacheVersion } from './cacheVersion'
 
 export { getCacheVersion, EBookingActions }
+
+/**
+ * HERE Maps API key. Sourced from `REACT_APP_HERE_API_KEY` at build
+ * time (CRA inlines `process.env.REACT_APP_*` into the bundle). Falls
+ * back to the historical key only when the env variable is missing,
+ * so existing self-hosted deployments keep working until the operator
+ * sets the variable. The fallback is the same value that was inlined
+ * before, so this change does not affect the public surface — it just
+ * stops coupling the secret rotation to a code release.
+ *
+ * Operator action item: set `REACT_APP_HERE_API_KEY` on Vercel/CI and
+ * restrict the new key by Referrer in the HERE console.
+ */
+const HERE_API_KEY: string =
+  (process.env.REACT_APP_HERE_API_KEY as string | undefined) ||
+  'cBumVVL0YkHvynJZNIL3SRtUfgxnEtPpXhvUVcE6Uh0'
 export {
   register,
   remindPassword,
@@ -388,7 +404,7 @@ export const getPointSuggestions = async(targetString?: string, isIntercity?: bo
           q: targetString.toString(),
           at: isIntercity ? `${coords[0]},${coords[1]}` : undefined,
           in: isIntercity ? `countryCode:${country}` : `circle:${coords};r=${SITE_CONSTANTS.SEARCH_RADIUS * 1000}`,
-          apiKey: 'cBumVVL0YkHvynJZNIL3SRtUfgxnEtPpXhvUVcE6Uh0',
+          apiKey: HERE_API_KEY,
           lang: language.iso,
           limit: 3,
         },

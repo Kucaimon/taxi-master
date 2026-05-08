@@ -23,6 +23,7 @@ import {
   getTileServerUrl,
   formatCurrency,
 } from '../../tools/utils'
+import { formatAddress } from '../../tools/format'
 import { useInterval } from '../../tools/hooks'
 import SITE_CONSTANTS from '../../siteConstants'
 import * as API from '../../API'
@@ -35,6 +36,23 @@ import { EDriverTabs } from '.'
 import './styles.scss'
 
 const cachedDriverMapStateKey = 'cachedDriverMapState'
+
+/**
+ * Escape user/API-provided text before injecting it into a Leaflet
+ * marker `html` string. The popup HTML is built via template literals,
+ * so without this `b_destination_address` containing an angle bracket
+ * (or, more commonly, the literal `undefined` when the address is
+ * missing) leaks into the DOM unsanitised. Cheap, sync, no DOMParser.
+ */
+const escapeHtml = (value: unknown): string => {
+  if (value === null || value === undefined) return ''
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 const mapDispatchToProps = {
   getOrder: orderActionCreators.getOrder,
@@ -275,7 +293,14 @@ function DriverOrderMapModeContent({
                 }'>
                     <div class='order-marker-hint'>
                       <div class='row-info'>
-                        ${item.b_destination_address}
+                        ${escapeHtml(formatAddress(
+                          {
+                            address: item.b_destination_address,
+                            latitude: item.b_destination_latitude,
+                            longitude: item.b_destination_longitude,
+                          },
+                          { short: true, withCoords: true },
+                        ))}
                       </div>
                       <div class='row-info'>
                         <div>${item.b_start_datetime.format(dateFormatTime)}</div>

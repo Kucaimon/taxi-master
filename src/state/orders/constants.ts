@@ -47,9 +47,25 @@ export interface IOrderState {
   stale: boolean
 }
 
+export interface IOrdersListError {
+  /** ISO timestamp of the failed request, used for log correlation. */
+  at: string
+  /** Best-effort human-readable description for the UI. */
+  message: string
+}
+
 export interface IOrdersState {
   orders: ImmutableMap<IOrder['b_id'], RecordOf<IOrderState>>
   activeOrders: ImmutableList<IOrder['b_id']> | null
   readyOrders: ImmutableList<IOrder['b_id']> | null
   historyOrders: ImmutableList<IOrder['b_id']> | null
+  /**
+   * Per-list error markers. A non-null entry means the most recent fetch
+   * for that list failed; cleared on the next successful response. The UI
+   * uses this to show "couldn't load, tap to retry" instead of a perpetual
+   * skeleton when the API is unreachable.
+   */
+  activeOrdersError: IOrdersListError | null
+  readyOrdersError: IOrdersListError | null
+  historyOrdersError: IOrdersListError | null
 }
