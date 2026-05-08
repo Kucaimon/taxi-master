@@ -355,26 +355,46 @@ const VotingForm = function VotingForm({
         </div>
       , [])}
 
-      {useMemo(() =>
-        <div className="passenger-voting-form__comments">
-          <div className="passenger-voting-form__comments-wrapper">
-            <span className="passenger-voting-form__comments-title">
-              {t(TRANSLATION.COMMENT)}
-            </span>
-            <span className="passenger-voting-form__comments-value">
-              {comments.ids.map(id =>
-                t(TRANSLATION.BOOKING_COMMENTS[id]),
-              ).join(', ') || '-'}
-            </span>
+      {useMemo(() => {
+        // Render preset checkbox labels together with the free-form
+        // text fields the modal collects: previously only `ids` were
+        // shown, so a user-typed comment looked lost the moment the
+        // modal closed (see customer screenshot, "Поорртл" disappearing).
+        const idLabels = comments.ids.map(id =>
+          t(TRANSLATION.BOOKING_COMMENTS[id]),
+        )
+        const planeParts: string[] = []
+        if (comments.flightNumber)
+          planeParts.push(`№ ${t(TRANSLATION.FLIGHT)} ${comments.flightNumber}`)
+        if (comments.placard)
+          planeParts.push(comments.placard)
+        const summary = [
+          ...idLabels,
+          ...planeParts,
+          comments.custom?.trim() || '',
+        ].filter(Boolean).join(', ')
+        return (
+          <div className="passenger-voting-form__comments">
+            <div className="passenger-voting-form__comments-wrapper">
+              <span className="passenger-voting-form__comments-title">
+                {t(TRANSLATION.COMMENT)}
+              </span>
+              <span
+                className="passenger-voting-form__comments-value"
+                title={summary || undefined}
+              >
+                {summary || '-'}
+              </span>
+            </div>
+            <button
+              className="passenger-voting-form__comments-btn"
+              onClick={() => setCommentsModal(true)}
+            >
+              <img src={images.seatSliderArrowRight} width={16} />
+            </button>
           </div>
-          <button
-            className="passenger-voting-form__comments-btn"
-            onClick={() => setCommentsModal(true)}
-          >
-            <img src={images.seatSliderArrowRight} width={16} />
-          </button>
-        </div>
-      , [comments, setCommentsModal])}
+        )
+      }, [comments, setCommentsModal])}
 
       {useMemo(() => {
         const phoneButtons: { src: string; onClick: () => void; alt?: string }[] = []
