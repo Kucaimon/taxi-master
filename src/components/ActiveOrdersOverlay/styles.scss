@@ -22,15 +22,24 @@ $status-problem: #EB5757;    // red: error / cancellation needed
 }
 
 .active-orders-overlay {
-  // The wrapper sits above the map. Make it transparent to pointer
-  // events so the user can pan the bare map between the cards;
-  // individual cards re-enable pointer events on themselves.
+  // The wrapper sits above the map (`position: absolute` relative to
+  // the surrounding `PageSection`, which is itself below the global
+  // `.layout__header`). The header already accounts for
+  // `safe-area-inset-top`, so we deliberately do *not* re-add it here
+  // — doing so would push the strip below where the user expects the
+  // first card to be on iPhones with a notch. Left/right insets are
+  // still honored because they only matter in landscape and aren't
+  // consumed by the header.
+  //
+  // The wrapper is transparent to pointer events so the user can pan
+  // the bare map between the cards; individual cards re-enable
+  // `pointer-events: auto` on themselves.
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1;
-  padding-top: calc(8px + env(safe-area-inset-top, 0px));
+  padding-top: 8px;
   padding-left: calc(8px + env(safe-area-inset-left, 0px));
   padding-right: calc(8px + env(safe-area-inset-right, 0px));
   pointer-events: none;
