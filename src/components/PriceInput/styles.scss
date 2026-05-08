@@ -4,42 +4,38 @@
   gap: 8px;
   width: 100%;
 
+  // When customer-price input isn't enabled, the single estimate
+  // segment fills the full row.
+  &--single &__container {
+    flex: 1 1 auto;
+  }
+
   &__container {
-    flex: 0 0 40px;
+    flex: 1 1 0;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: center;
-    column-gap: 12px;
+    column-gap: 8px;
     height: 40px;
-    padding: 0 12px 0 12px;
+    padding: 0 12px;
     border-radius: 16px;
     background-color: #E7E7E7;
-    transition: 0.5s ease-in-out;
-    transition-property: flex-grow, padding;
-    cursor: pointer;
+    min-width: 0; // allow children to ellipsis inside flex
 
     &--disabled {
       background-color: #EFEFEF;
     }
-
-    &--active {
-      flex-grow: 1;
-      width: 100%;
-      padding: 0 15px 0 0;
-      cursor: inherit;
-    }
   }
 
   &__segment {
-    display: none;
-
-    &--active {
-      width: 100%;
-      display: block;
-    }
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
   }
 
   &__icon {
+    flex: 0 0 auto;
     width: 16px;
+    opacity: 0.6;
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import cn from 'classnames'
 import { connect, ConnectedProps } from 'react-redux'
 import moment from 'moment'
@@ -49,28 +49,32 @@ function PriceInput({
     carClass,
   ), [from, to, time, carClass])
 
-  const [active, setActive] = useState(0)
+  // The previous toggle UI hid one of the two values behind a 40px
+  // icon-only bubble; once the user typed a customer price and looked
+  // at the estimate, their input became invisible and felt lost. Both
+  // segments are now rendered side-by-side so both values stay
+  // readable at all times. The customer price is still optional —
+  // when it's empty the estimate is the only number on screen.
+  const showCustomerPrice = SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE
 
   return (
-    <div className={cn('price-input', className)}>
-      {useMemo(() =>
+    <div
+      className={cn('price-input', {
+        'price-input--single': !showCustomerPrice,
+      }, className)}
+    >
+      <PriceInputItem
+        disabled
+        inputProps={{
+          value: `${
+            t(TRANSLATION.COST)
+          }: ${
+            typeof payment === 'number' ? formatCurrency(payment) : payment
+          }`,
+        }}
+      />
+      {showCustomerPrice && (
         <PriceInputItem
-          disabled
-          active={active === 0}
-          setActive={() => setActive(0)}
-          inputProps={{
-            value: `${
-              t(TRANSLATION.COST)
-            }: ${
-              typeof payment === 'number' ? formatCurrency(payment) : payment
-            }`,
-          }}
-        />
-      , [active === 0 && payment])}
-      {useMemo(() => SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE &&
-        <PriceInputItem
-          active={active === 1}
-          setActive={() => setActive(1)}
           inputProps={{
             value: customerPrice ?? '',
             placeholder: t(TRANSLATION.CUSTOMER_PRICE),
@@ -80,7 +84,7 @@ function PriceInput({
           }}
           inputType={EInputTypes.Number}
         />
-      , [active === 1 && customerPrice])}
+      )}
     </div>
   )
 }
@@ -89,14 +93,10 @@ export default connector(PriceInput)
 
 interface IItemProps extends React.ComponentProps<typeof Input> {
   disabled?: boolean
-  active: boolean
-  setActive: React.Dispatch<React.SetStateAction<unknown>>
 }
 
 function PriceInputItem({
   disabled = false,
-  active,
-  setActive,
   children,
   ...inputProps
 }: React.PropsWithChildren<IItemProps>) {
@@ -104,14 +104,10 @@ function PriceInputItem({
     <div
       className={cn('price-input__container', {
         'price-input__container--disabled': disabled,
-        'price-input__container--active': active,
       })}
-      onClick={setActive}
     >
       <Input
-        fieldWrapperClassName={cn('price-input__segment', {
-          'price-input__segment--active': active,
-        })}
+        fieldWrapperClassName="price-input__segment"
         style={EInputStyles.RedDesign}
         {...inputProps}
         inputProps={{ disabled, ...(inputProps.inputProps ?? {}) }}
