@@ -21,6 +21,11 @@ import {
 import Icon from '../../components/Icon'
 import Input, { EInputTypes, EInputStyles } from '../../components/Input'
 import Button, { EButtonStyles } from '../../components/Button'
+import {
+  getItem as getLocalItem,
+  setItem as setLocalItem,
+  removeItem as removeLocalItem,
+} from '../../tools/localStorage'
 import LocationInput from '../../components/LocationInput'
 import ShortInfo from '../../components/ShortInfo'
 import SeatSlider from '../../components/SeatSlider'
@@ -103,6 +108,37 @@ const VotingForm = function VotingForm({
   useLayoutEffect(() => { setToError(null) }, [to])
   const [phoneError, setPhoneError] = useState<string | null>(null)
   useLayoutEffect(() => { setPhoneError(null) }, [phone])
+
+  // "Remember this phone" toggle. When the star is filled, the typed
+  // phone is mirrored into a dedicated localStorage key and is restored
+  // by `loadFromStorageSaga` on the next visit. Keeps the user from
+  // re-typing a non-registration phone every time and is intentionally
+  // separate from the per-keystroke `state.clientOrder.phone` draft —
+  // that one gets wiped on redeploy by the build-version logic.
+  const REMEMBERED_PHONE_KEY = 'state.clientOrder.rememberedPhone'
+  const [isPhoneRemembered, setIsPhoneRemembered] = useState<boolean>(
+    () => getLocalItem<number>(REMEMBERED_PHONE_KEY) !== undefined,
+  )
+
+  useEffect(() => {
+    if (isPhoneRemembered && typeof phone === 'number')
+      setLocalItem(REMEMBERED_PHONE_KEY, phone)
+  }, [isPhoneRemembered, phone])
+
+  const togglePhoneRemember = useCallback(() => {
+    setIsPhoneRemembered(prev => {
+      if (prev) {
+        removeLocalItem(REMEMBERED_PHONE_KEY)
+        return false
+      }
+      if (typeof phone !== 'number') {
+        setPhoneError(t(TRANSLATION.REQUIRED_FIELD))
+        return prev
+      }
+      setLocalItem(REMEMBERED_PHONE_KEY, phone)
+      return true
+    })
+  }, [phone])
 
   const store = useStore<IRootState>()
   const submit = useCallback(async(voting = false) => {
@@ -340,29 +376,39 @@ const VotingForm = function VotingForm({
         </div>
       , [comments, setCommentsModal])}
 
-      {useMemo(() =>
-        <Input
-          fieldWrapperClassName="passenger-voting-form__input"
-          inputProps={{
-            value: phone ?? '',
-          }}
-          inputType={EInputTypes.MaskedPhone}
-          style={EInputStyles.RedDesign}
-          buttons={user?.u_phone ?
-            [{
-              src: images.checkMarkRed,
-              onClick() {
-                setPhone(+user!.u_phone!)
-              },
-            }] :
-            []
-          }
-          error={phoneError ?? undefined}
-          onChange={(e) => {
-            setPhone(e as number)
-          }}
-        />
-      , [phone, setPhone, user, phoneError])}
+      {useMemo(() => {
+        const phoneButtons: { src: string; onClick: () => void; alt?: string }[] = []
+        if (user?.u_phone)
+          phoneButtons.push({
+            src: images.checkMarkRed,
+            onClick: () => setPhone(+user!.u_phone!),
+            alt: 'Use registration phone',
+          })
+        // Star toggle: persist current phone for next orders. Filled =
+        // remembered, empty = ad-hoc.
+        phoneButtons.push({
+          src: isPhoneRemembered ? images.starFull : images.starEmpty,
+          onClick: togglePhoneRemember,
+          alt: isPhoneRemembered ?
+            'Forget remembered phone' :
+            'Remember this phone for next orders',
+        })
+        return (
+          <Input
+            fieldWrapperClassName="passenger-voting-form__input"
+            inputProps={{
+              value: phone ?? '',
+            }}
+            inputType={EInputTypes.MaskedPhone}
+            style={EInputStyles.RedDesign}
+            buttons={phoneButtons}
+            error={phoneError ?? undefined}
+            onChange={(e) => {
+              setPhone(e as number)
+            }}
+          />
+        )
+      }, [phone, setPhone, user, phoneError, isPhoneRemembered, togglePhoneRemember])}
       {useMemo(() => SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE &&
         <PriceInput className="passenger-voting-form__input" />
       , [])}

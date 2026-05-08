@@ -54,6 +54,14 @@ function* loadFromStorageSaga() {
   ))
     if (payload !== undefined)
       yield put({ type, payload })
+
+  // Restore the explicitly remembered phone (toggled by the star button
+  // in the order form). This is a separate, opt-in storage from the
+  // auto-saved per-keystroke draft and survives the build-version cache
+  // wipe that clears the rest of the draft on redeploys.
+  const rememberedPhone = getItem<number>('state.clientOrder.rememberedPhone')
+  if (typeof rememberedPhone === 'number')
+    yield put({ type: ActionTypes.SET_PHONE, payload: rememberedPhone })
 }
 
 function* dumpSelectsToStorageSaga() {
