@@ -30,9 +30,9 @@ const ClientInfo: React.FC<IProps> = ({
       <img src={images.passengerAvatar} alt={t(TRANSLATION.PASSENGER)}/>
       <span>
         <span className="colored">{_userName} {_extInfo}</span>
-        <div>
-          <img src={images.stars} alt={t(TRANSLATION.STARS)}/>
-        </div>
+        {/* Static 5-star image removed — the backend doesn't expose
+            real client ratings yet, so showing the same mock graphic
+            for everybody was actively misleading drivers. */}
       </span>
     </div>
     <div className="order__separator"/>

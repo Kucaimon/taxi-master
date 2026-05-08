@@ -177,16 +177,10 @@ function OrderCard({
             </span>
         }
       </div>
-      {
-        // driver?.c_state !== EBookingDriverState.Finished && <div className="status-card__other-info">
-        //   <span>
-        //     {/* TODO real time */}
-        //     {t(TRANSLATION.APPROXIMATE_TIME)}: 1 {t(TRANSLATION.HOUR)}
-        //     <img src={images.clockGrey} alt={t(TRANSLATION.CLOCK)}/>
-        //   </span>
-        //   <img src={images.stars} alt={t(TRANSLATION.STARS)}/>
-        // </div>
-      }
+      {/* A previous prototype of this card showed an "approximate
+          time: 1 hour" line and a static 5-star image; both were
+          hardcoded mocks. They were already commented out — the
+          block is removed entirely now to keep the file readable. */}
     </div>
   </>)
 }

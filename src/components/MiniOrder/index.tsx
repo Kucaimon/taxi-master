@@ -7,7 +7,6 @@ import {
   IOrder,
   IUser,
 } from '../../types/types'
-import images from '../../constants/images'
 import { CURRENCY } from '../../siteConstants'
 import {
   EPaymentType,
@@ -109,8 +108,17 @@ function MiniOrder({
         </span>
       )}
 
-      <img src={images.stars} alt={t(TRANSLATION.STARS)}/>
-      <span className="mini-order__time colored">0 {t(TRANSLATION.MINUTES)}</span>
+      {/* Fake 5-star image and the hardcoded "0 minutes" placeholder
+          were removed — they showed the same value for every order
+          regardless of state and made it look like the card had a
+          real rating/ETA. The real ETA from `b_estimate_waiting` is
+          rendered below; the rating will come back once the backend
+          ships per-user ratings. */}
+      {!!order.b_estimate_waiting && order.b_estimate_waiting > 0 && (
+        <span className="mini-order__time colored">
+          ~{order.b_estimate_waiting} {t(TRANSLATION.MINUTES)}
+        </span>
+      )}
 
       <span className="mini-order__icon">
         <img src={getOrderIcon(order)} alt="clients"/>

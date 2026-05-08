@@ -103,8 +103,11 @@ const DriverModal: React.FC<IProps> = ({
               </div>
               <div>
                 <img src={images.driverAvatar} alt={t(TRANSLATION.DRIVER)}/>
-                {/* TODO replace by rating component with real rating */}
-                <img src={images.stars} alt={t(TRANSLATION.STARS)}/>
+                {/* The static 5-star image was misleading because every
+                    driver appeared with a perfect rating regardless
+                    of history. It will be reintroduced as a real
+                    component once the backend exposes per-driver
+                    ratings. */}
               </div>
               <div className="colored">
                 <img
