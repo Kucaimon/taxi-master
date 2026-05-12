@@ -1,3 +1,4 @@
+import { eventChannel } from 'redux-saga'
 import { all, race, fork, take, put, delay } from 'redux-saga/effects'
 import moment from 'moment'
 import { TAction } from '../../types'
@@ -10,6 +11,7 @@ import {
 } from '../../tools/sagaUtils'
 import { updateCompletedOrderDuration } from '../../tools/order'
 import { geopositionToPoint } from '../../tools/maps'
+import { getRealtimeTransport } from '../../services/realtime'
 import * as API from '../../API'
 import { IRootState } from '..'
 import { geoposition as geopositionSelector } from '../geolocation/selectors'
@@ -24,7 +26,10 @@ import {
   activeOrders, readyOrders, historyOrders,
 } from './selectors'
 
-const ACTIVE_ORDERS_POLL_INTERVAL = 5000
+// Client (passenger) active-orders cadence now lives in
+// `src/services/realtime/polling.ts` (ACTIVE_ORDERS_INTERVAL_MS = 5000)
+// because the transport owns the timer. Driver cadence stays here
+// until that path is migrated.
 const DRIVER_ACTIVE_ORDERS_POLL_INTERVAL = 2000
 const READY_ORDERS_POLL_INTERVAL = 3000
 const HISTORY_ORDERS_POLL_INTERVAL = 10000
@@ -87,6 +92,32 @@ export function* saga() {
   ])
 }
 
+/**
+ * Singleton channel that bridges the realtime transport's
+ * `orderUpdated` event (scope `active`) into saga-land. Created lazily
+ * on first listener so test environments without `document`/`window`
+ * never instantiate the transport.
+ *
+ * Phase 1: the only consumer is `watchActiveOrdersSaga` (client users).
+ * The driver path still polls via `delayPausable`.
+ */
+let _activeOrdersTransportChannel:
+  ReturnType<typeof eventChannel<'tick'>> | null = null
+const getActiveOrdersTransportChannel = () => {
+  if (_activeOrdersTransportChannel) return _activeOrdersTransportChannel
+  _activeOrdersTransportChannel = eventChannel<'tick'>(emit => {
+    const transport = getRealtimeTransport()
+    transport.connect()
+    const unsubscribe = transport.subscribe('orderUpdated', payload => {
+      if (payload.scope === 'active') emit('tick')
+    })
+    return () => {
+      unsubscribe()
+    }
+  })
+  return _activeOrdersTransportChannel
+}
+
 function* watchActiveOrdersSaga() {
   const user = yield* select(userSelector)
   if (!user) {
@@ -98,10 +129,22 @@ function* watchActiveOrdersSaga() {
     ActionTypes.GET_ACTIVE_ORDERS_SUCCESS,
     ActionTypes.GET_ACTIVE_ORDERS_FAIL,
   ])
-  const interval = user.u_role === EUserRoles.Driver ?
-    DRIVER_ACTIVE_ORDERS_POLL_INTERVAL :
-    ACTIVE_ORDERS_POLL_INTERVAL
-  yield* delayPausable(interval)
+
+  if (user.u_role === EUserRoles.Client) {
+    // Client (passenger) path is now driven by the RealtimeTransport.
+    // The transport owns the cadence (today: polling, tomorrow: WS) and
+    // emits a refresh signal that we translate back into the same
+    // `GET_ACTIVE_ORDERS_REQUEST` the existing saga flow expects. All
+    // post-processing in `getActiveOrdersSaga` (expired-order cancel,
+    // `setSelectedOrder`, `afterOrdersChangeSaga`) is untouched.
+    yield take(getActiveOrdersTransportChannel())
+    return
+  }
+
+  // Driver path is intentionally NOT migrated in phase 1 (different
+  // owner, faster cadence). It keeps the original visibility-aware
+  // polling delay.
+  yield* delayPausable(DRIVER_ACTIVE_ORDERS_POLL_INTERVAL)
 }
 
 function* watchReadyOrdersSaga() {
