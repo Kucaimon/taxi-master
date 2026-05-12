@@ -49,22 +49,29 @@ function PriceInput({
     carClass,
   ), [from, to, time, carClass])
 
-  // The previous toggle UI hid one of the two values behind a 40px
-  // icon-only bubble; once the user typed a customer price and looked
-  // at the estimate, their input became invisible and felt lost. Both
-  // segments are now rendered side-by-side so both values stay
-  // readable at all times. The customer price is still optional —
-  // when it's empty the estimate is the only number on screen.
+  // Mixed layout per latest customer feedback (Валентин, 8 May 2026):
+  //  • Customer-price empty → keep the original layout: estimate fills
+  //    the row, customer-price collapses to a small icon-only bubble.
+  //  • Customer-price entered → both segments share the row 50/50 so
+  //    the user's offer stays visible alongside the estimate.
+  // The toggle behaviour ("active" segment grows, inactive collapses)
+  // is reproduced via CSS modifier classes — no more `useState` so the
+  // layout is derived purely from the entered value.
   const showCustomerPrice = SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE
+  const hasCustomerPrice = typeof customerPrice === 'number'
 
   return (
     <div
       className={cn('price-input', {
         'price-input--single': !showCustomerPrice,
+        'price-input--both': showCustomerPrice && hasCustomerPrice,
+        'price-input--estimate-focused':
+          showCustomerPrice && !hasCustomerPrice,
       }, className)}
     >
       <PriceInputItem
         disabled
+        variant="estimate"
         inputProps={{
           value: `${
             t(TRANSLATION.COST)
@@ -75,6 +82,7 @@ function PriceInput({
       />
       {showCustomerPrice && (
         <PriceInputItem
+          variant="customer"
           inputProps={{
             value: customerPrice ?? '',
             placeholder: t(TRANSLATION.CUSTOMER_PRICE),
@@ -93,10 +101,12 @@ export default connector(PriceInput)
 
 interface IItemProps extends React.ComponentProps<typeof Input> {
   disabled?: boolean
+  variant?: 'estimate' | 'customer'
 }
 
 function PriceInputItem({
   disabled = false,
+  variant,
   children,
   ...inputProps
 }: React.PropsWithChildren<IItemProps>) {
@@ -104,6 +114,8 @@ function PriceInputItem({
     <div
       className={cn('price-input__container', {
         'price-input__container--disabled': disabled,
+        'price-input__container--estimate': variant === 'estimate',
+        'price-input__container--customer': variant === 'customer',
       })}
     >
       <Input

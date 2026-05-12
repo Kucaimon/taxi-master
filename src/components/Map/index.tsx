@@ -21,9 +21,44 @@ import { EMapModalTypes } from '../../state/modals/constants'
 import { clientOrderSelectors } from '../../state/clientOrder'
 import { ordersSelectors } from '../../state/orders'
 import { orderSelectors } from '../../state/order'
+import * as storage from '../../tools/localStorage'
 import './styles.scss'
 
 const defaultZoom = 15
+
+// Persisted "last known position" so the map opens centered on the user's
+// real area instead of the country-level default while geolocation is
+// still resolving. Anything older than a week is considered stale and is
+// ignored — by then the user could realistically be anywhere.
+const CACHED_POSITION_KEY = 'map.lastKnownPosition'
+const CACHED_POSITION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
+interface ICachedPosition {
+  latitude: number
+  longitude: number
+  ts: number
+}
+
+function readCachedPosition(): [number, number] | null {
+  const cached = storage.getItem<ICachedPosition | null>(CACHED_POSITION_KEY, null)
+  if (
+    cached &&
+    typeof cached.latitude === 'number' &&
+    typeof cached.longitude === 'number' &&
+    typeof cached.ts === 'number' &&
+    Date.now() - cached.ts < CACHED_POSITION_MAX_AGE_MS
+  )
+    return [cached.latitude, cached.longitude]
+  return null
+}
+
+function writeCachedPosition(latitude: number, longitude: number) {
+  storage.setItem<ICachedPosition>(CACHED_POSITION_KEY, {
+    latitude,
+    longitude,
+    ts: Date.now(),
+  })
+}
 
 const mapStateToProps = (state: IRootState) => ({
   type: modalsSelectors.mapModalType(state),
@@ -62,7 +97,11 @@ function Map({
       key={SITE_CONSTANTS.MAP_MODE}
     >
       <MapContainer
-        center={defaultCenter || SITE_CONSTANTS.DEFAULT_POSITION}
+        center={
+          defaultCenter ||
+          readCachedPosition() ||
+          SITE_CONSTANTS.DEFAULT_POSITION
+        }
         zoom={defaultZoom}
         className='map'
         attributionControl={false}
@@ -189,6 +228,12 @@ function MapContent({
       if (cancelled) return
       setUserCoordinates({ latitude: lat, longitude: lng })
       setUserCoordinatesAccuracy(accuracy)
+      // Cache the fix so the next page open starts on the right area
+      // rather than the country-level fallback. Only cache reasonably
+      // accurate readings — a 5000 m fix would otherwise teach the app
+      // the wrong neighborhood.
+      if (accuracy && accuracy < 1000)
+        writeCachedPosition(lat, lng)
     }
 
     const shouldAutoCenter = !defaultCenter
@@ -241,6 +286,8 @@ function MapContent({
           longitude: coords.longitude,
         })
         setUserCoordinatesAccuracy(coords.accuracy)
+        if (coords.accuracy && coords.accuracy < 1000)
+          writeCachedPosition(coords.latitude, coords.longitude)
       },
       error => console.error(error),
       { enableHighAccuracy: true },
@@ -483,12 +530,48 @@ function MapContent({
         tabIndex={0}
       />
       <div className="map-container__custom-controls">
-        {/* "My location" button removed: the user blue dot is already
-            rendered on the map (see geolocation marker), the duplicate
-            button took ~7s to settle on a fix and added no real value
-            on top of the existing marker. */}
-        <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
           {isFullscreen ? '⤢' : '⛶'}
+        </button>
+        <button
+          type="button"
+          aria-label="Show my location"
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            // Snapshot whatever fix we already have so the camera
+            // moves immediately and the user gets feedback even if
+            // the high-accuracy request takes a few seconds.
+            if (userCoordinates?.latitude && userCoordinates?.longitude) {
+              map.flyTo(
+                [userCoordinates.latitude, userCoordinates.longitude],
+                Math.max(map.getZoom(), 16),
+              )
+            }
+            navigator.geolocation.getCurrentPosition(
+              ({ coords }) => {
+                setUserCoordinates({
+                  latitude: coords.latitude,
+                  longitude: coords.longitude,
+                })
+                setUserCoordinatesAccuracy(coords.accuracy)
+                if (coords.accuracy && coords.accuracy < 1000)
+                  writeCachedPosition(coords.latitude, coords.longitude)
+                map.flyTo(
+                  [coords.latitude, coords.longitude],
+                  Math.max(map.getZoom(), 16),
+                )
+              },
+              (err) => console.error(err),
+              { enableHighAccuracy: true, maximumAge: 0, timeout: 10_000 },
+            )
+          }}
+        >
+          ◎
         </button>
       </div>
       {/* {!disableButtons && <div className={cn('modal-buttons',{'z-indexed': isModal})}>

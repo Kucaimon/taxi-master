@@ -4,16 +4,54 @@
   gap: 8px;
   width: 100%;
 
-  // When customer-price input isn't enabled, the single estimate
-  // segment fills the full row.
+  // When customer-price feature is disabled (`ENABLE_CUSTOMER_PRICE=false`)
+  // the estimate alone fills the row.
   &--single &__container {
     flex: 1 1 auto;
   }
 
-  &__container {
+  // Two segments side-by-side, equal width. Used when the user has
+  // entered a customer price — both numbers stay visible at the same
+  // time so the user can compare their offer to the estimate.
+  &--both &__container {
     flex: 1 1 0;
-    display: flex;
+  }
+
+  // Default: customer price is empty. The estimate takes most of the
+  // row and the (empty) customer-price field collapses to an icon
+  // button, matching the original UI that the customer asked us to
+  // keep when their value isn't set.
+  &--estimate-focused &__container {
+    flex: 0 0 40px;
+    justify-content: flex-end;
+    column-gap: 0;
+    padding: 0 12px;
+    cursor: pointer;
+    transition: 0.25s ease-in-out;
+    transition-property: flex-grow, padding;
+  }
+  &--estimate-focused &__container--estimate {
+    flex: 1 1 auto;
     justify-content: flex-start;
+    padding: 0 12px;
+    cursor: default;
+  }
+  &--estimate-focused &__container:not(.price-input__container--estimate)
+    &__segment input {
+    // Hide the input itself when collapsed — the icon serves as
+    // the visual representation of the field.
+    width: 0;
+    padding: 0;
+    border: 0;
+  }
+  &--estimate-focused &__container:not(.price-input__container--estimate)
+    &__segment {
+    width: 0;
+    overflow: hidden;
+  }
+
+  &__container {
+    display: flex;
     align-items: center;
     column-gap: 8px;
     height: 40px;
