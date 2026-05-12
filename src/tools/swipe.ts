@@ -23,17 +23,28 @@ export function useSwipe(
   isExpandedRef.current = isExpanded
 
   const getLiftingHeightBounds = useCallback((): [min: number, max: number] => {
-    if (!element.current)
-      return [0, 0]
-    const parent = element.current.offsetParent! as HTMLElement
-    const visible = parent.offsetHeight - element.current.offsetTop
-    const expanded = element.current.offsetHeight
+    // `offsetParent` returns `null` when the element (or one of its
+    // ancestors) is `display: none`, detached from the DOM, or the
+    // element itself is `position: fixed` without a positioned
+    // ancestor. The previous non-null assertion crashed the
+    // ResizeObserver in those cases — most reliably when we toggle
+    // the passenger page into fullscreen, which re-pins the draggable
+    // form with `position: fixed` while the observer is still firing.
+    // Bailing out with a zero range keeps the hook a no-op until the
+    // element is back in the regular layout flow.
+    const el = element.current
+    if (!el) return [0, 0]
+    const parent = el.offsetParent as HTMLElement | null
+    if (!parent) return [0, 0]
+    const visible = parent.offsetHeight - el.offsetTop
+    const expanded = el.offsetHeight
 
     let minimized = visible
-    if (minimizedPart?.current) {
-      minimized = minimizedPart.current.offsetHeight
-      let minimizedParent: HTMLElement | null = minimizedPart.current
-      while (minimizedParent && minimizedParent !== element.current) {
+    const minPartEl = minimizedPart?.current
+    if (minPartEl) {
+      minimized = minPartEl.offsetHeight
+      let minimizedParent: HTMLElement | null = minPartEl
+      while (minimizedParent && minimizedParent !== el) {
         minimized += minimizedParent.offsetTop
         minimizedParent = minimizedParent.offsetParent as HTMLElement | null
       }
