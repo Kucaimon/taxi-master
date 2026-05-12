@@ -1,0 +1,9 @@
+/node_modules
+/lib/**/node_modules
+.vercel
+build/*
+yarn.lock
+.idea
+.vscode
+.env
+.vercel

@@ -1,0 +1,12 @@
+.comments-modal {
+  &__form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 16px;
+  }
+
+  &__plane-inputs {
+    display: flex;
+    column-gap: 16px;
+  }
+}

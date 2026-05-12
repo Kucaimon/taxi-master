@@ -1,0 +1,39 @@
+@use '../Theme';
+
+.short-info {
+  display: flex;
+  align-items: center;
+  column-gap: 8px;
+  overflow-x: auto;
+  height: 16px;
+
+  &__item {
+    flex: none;
+    display: flex;
+    align-items: center;
+    column-gap: 4px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  &__line {
+    width: 1px;
+    height: 12px;
+    border-radius: 0.5px;
+    background-color: #E7E7E7;
+  }
+
+  &__icon {
+    width: 16px;
+    stroke: var(#{Theme.$foreground});
+  }
+
+  &__item--active &__icon {
+    stroke: var(#{Theme.$accent});
+  }
+
+  &__text {
+    font-size: 10px;
+    font-weight: 500;
+  }
+}

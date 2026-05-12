@@ -1,0 +1,45 @@
+.price-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  &__container {
+    flex: 0 0 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    column-gap: 12px;
+    height: 40px;
+    padding: 0 12px 0 12px;
+    border-radius: 16px;
+    background-color: #E7E7E7;
+    transition: 0.5s ease-in-out;
+    transition-property: flex-grow, padding;
+    cursor: pointer;
+
+    &--disabled {
+      background-color: #EFEFEF;
+    }
+
+    &--active {
+      flex-grow: 1;
+      width: 100%;
+      padding: 0 15px 0 0;
+      cursor: inherit;
+    }
+  }
+
+  &__segment {
+    display: none;
+
+    &--active {
+      width: 100%;
+      display: block;
+    }
+  }
+
+  &__icon {
+    width: 16px;
+  }
+}
