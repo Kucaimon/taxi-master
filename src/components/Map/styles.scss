@@ -188,7 +188,9 @@
     height: 100dvh !important;
   }
 
-  // Pin the bottom form above the fullscreen map.
+  // Pin the bottom form above the fullscreen map. Do not cap with a
+  // small vh fraction or `min-height: 0` — that squashed the sheet and
+  // starved swipe math; match the passenger mobile sheet limits instead.
   .passenger__form-container {
     position: fixed !important;
     left: 0 !important;
@@ -197,15 +199,14 @@
     top: auto !important;
     z-index: 2100 !important;
     width: 100% !important;
-    min-height: 0 !important;
-    max-height: 60vh !important;
-    max-height: 60dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
     padding-top: 0 !important;
   }
 
   .passenger__draggable {
-    max-height: calc(60vh - env(safe-area-inset-bottom, 0px)) !important;
-    max-height: calc(60dvh - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100vh - 160px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px)) !important;
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
   }
 

@@ -23,21 +23,33 @@ export function useSwipe(
   isExpandedRef.current = isExpanded
 
   const getLiftingHeightBounds = useCallback((): [min: number, max: number] => {
-    // `offsetParent` returns `null` when the element (or one of its
-    // ancestors) is `display: none`, detached from the DOM, or the
-    // element itself is `position: fixed` without a positioned
-    // ancestor. The previous non-null assertion crashed the
-    // ResizeObserver in those cases — most reliably when we toggle
-    // the passenger page into fullscreen, which re-pins the draggable
-    // form with `position: fixed` while the observer is still firing.
-    // Bailing out with a zero range keeps the hook a no-op until the
-    // element is back in the regular layout flow.
+    // `offsetParent` is `null` for `position: fixed` in normal cases.
+    // Passenger map fullscreen pins `.passenger__form-container` with
+    // `fixed`, which would make the old math bail to `[0, 0]` and
+    // freeze the sheet. When that happens, treat `.page-section` as
+    // the height box and derive `offsetTop` from bounding rects.
     const el = element.current
     if (!el) return [0, 0]
-    const parent = el.offsetParent as HTMLElement | null
-    if (!parent) return [0, 0]
-    const visible = parent.offsetHeight - el.offsetTop
+
     const expanded = el.offsetHeight
+    const parent = el.offsetParent as HTMLElement | null
+    let parentHeight: number
+    let relTop: number
+
+    if (parent) {
+      parentHeight = parent.offsetHeight
+      relTop = el.offsetTop
+    } else {
+      const layoutRoot = el.closest('.page-section') as HTMLElement | null
+      if (!layoutRoot) return [0, 0]
+      parentHeight = layoutRoot.offsetHeight
+      relTop =
+        el.getBoundingClientRect().top
+        - layoutRoot.getBoundingClientRect().top
+        + layoutRoot.scrollTop
+    }
+
+    const visible = parentHeight - relTop
 
     let minimized = visible
     const minPartEl = minimizedPart?.current
@@ -81,6 +93,9 @@ export function useSwipe(
     window.addEventListener('resize', update)
     const observer = new ResizeObserver(update)
     observer.observe(element.current)
+    const section = element.current.closest('.page-section')
+    if (section)
+      observer.observe(section)
     if (minimizedPart?.current)
       observer.observe(minimizedPart.current)
     return () => {
