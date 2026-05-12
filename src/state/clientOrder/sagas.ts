@@ -7,6 +7,7 @@ import {
 } from '../../tools/utils'
 import { pickCityFromGeocode } from '../../tools/format'
 import { getItem, setItem, removeItem } from '../../tools/localStorage'
+import { logGeolocationError } from '../../tools/geoLog'
 import { call, select } from '../../tools/sagaUtils'
 import { IRootState } from '..'
 import { configConstants } from '../config'
@@ -133,7 +134,17 @@ function* setPointSaga(action: TAction) {
       value = { ...value, latitude, longitude }
       yield put({ type: setAction, payload: value })
     } catch (error) {
-      console.warn('Geolocation error', error)
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        'message' in error &&
+        typeof (error as GeolocationPositionError).code === 'number'
+      ) {
+        logGeolocationError(error as GeolocationPositionError, 'saga:clientOrder')
+      } else {
+        console.warn('Geolocation error', error)
+      }
     }
   }
 

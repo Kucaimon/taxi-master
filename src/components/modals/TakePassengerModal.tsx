@@ -14,6 +14,7 @@ import './styles.scss'
 import Overlay from './Overlay'
 import { EStatuses, ISuggestion } from '../../types/types'
 import { userActionCreators } from '../../state/user'
+import { logGeolocationError } from '../../tools/geoLog'
 import _ from 'lodash'
 
 const mapStateToProps = (state: IRootState) => ({
@@ -93,7 +94,7 @@ const TakePassengerModal: React.FC<IProps> = ({
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => updateTakePassengerModal({ from: { latitude: coords.latitude, longitude: coords.longitude } }),
-      error => console.error(error),
+      error => logGeolocationError(error, 'modal:takePassenger'),
       { enableHighAccuracy: true },
     )
   }, [])

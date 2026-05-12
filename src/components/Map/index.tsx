@@ -22,6 +22,7 @@ import { clientOrderSelectors } from '../../state/clientOrder'
 import { ordersSelectors } from '../../state/orders'
 import { orderSelectors } from '../../state/order'
 import * as storage from '../../tools/localStorage'
+import { logGeolocationError } from '../../tools/geoLog'
 import './styles.scss'
 
 const defaultZoom = 15
@@ -265,7 +266,7 @@ function MapContent({
           map.panTo([coords.latitude, coords.longitude], { animate: false })
         }
       },
-      e => console.error(e.message),
+      e => logGeolocationError(e, 'map:initial'),
       {
         enableHighAccuracy: true,
         maximumAge: 0,
@@ -289,7 +290,7 @@ function MapContent({
         if (coords.accuracy && coords.accuracy < 1000)
           writeCachedPosition(coords.latitude, coords.longitude)
       },
-      error => console.error(error),
+      error => logGeolocationError(error, 'map:refresh'),
       { enableHighAccuracy: true },
     )
   }, 20000)
@@ -566,7 +567,7 @@ function MapContent({
                   Math.max(map.getZoom(), 16),
                 )
               },
-              (err) => console.error(err),
+              (err) => logGeolocationError(err, 'map:myLocation'),
               { enableHighAccuracy: true, maximumAge: 0, timeout: 10_000 },
             )
           }}

@@ -33,6 +33,7 @@ import { t, TRANSLATION } from '../../localization'
 import PageSection from '../../components/PageSection'
 import Button from '../../components/Button'
 import { EDriverTabs } from '.'
+import { logGeolocationError } from '../../tools/geoLog'
 import './styles.scss'
 
 const cachedDriverMapStateKey = 'cachedDriverMapState'
@@ -149,7 +150,13 @@ function DriverOrderMapModeContent({
         if (locate)
           map.setView(e.latlng)
       })
-      map.once('locationerror', (e: L.ErrorEvent) => console.error(e.message))
+      map.once('locationerror', (e: L.ErrorEvent) => {
+        const raw = e as unknown as { code?: number; message?: string }
+        if (typeof raw.code === 'number' && typeof raw.message === 'string')
+          logGeolocationError(raw as GeolocationPositionError, 'driver-map:leaflet-locate')
+        else if (raw.message)
+          console.warn(`[driver-map:leaflet-locate] ${raw.message}`)
+      })
       map.locate({
         timeout: Infinity,
         enableHighAccuracy: true,
@@ -207,7 +214,7 @@ function DriverOrderMapModeContent({
           return [[coords.latitude, coords.longitude]] as typeof prev
         })
       },
-      error => console.error(error),
+      error => logGeolocationError(error, 'driver-map:poll'),
       { enableHighAccuracy: true },
     )
   }, 2000)
