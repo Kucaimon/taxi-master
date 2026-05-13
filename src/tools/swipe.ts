@@ -72,7 +72,14 @@ export function useSwipe(
     if (!element.current || !draggable.current)
       return
     const [min, max] = height
-    const translate = Math.max(Math.min(value, -min), -max)
+    // Bottom-anchored sheet: never apply positive translateY (that shoves the
+    // form below the viewport). When `minimized - visible` is negative —
+    // common on mobile when the reserved "peek" is shorter than the slot
+    // below the map — the old math produced a positive clamp.
+    const translate = Math.min(
+      0,
+      Math.max(Math.min(value, -min), -max),
+    )
     element.current.style.transform = `translateY(${translate}px)`
     if (translate > -max) {
       draggable.current.style.overflow = 'hidden'

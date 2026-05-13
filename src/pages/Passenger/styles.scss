@@ -3,6 +3,13 @@
 $formPlaceholderHeight: 208px - 16px;
 
 .passenger {
+  // Fill `layout__content` reliably on iOS flex layout (default
+  // `min-height: auto` can prevent the percentage-height chain from
+  // matching the visible viewport, which breaks swipe bounds + the
+  // absolute bottom form anchor).
+  flex: 1 1 auto;
+  min-height: 0;
+
   // Compatibility hook for the new ActiveOrdersOverlay. Positioning
   // and safe-area handling now live inside the component itself; this
   // class only exists to give callers a stable selector for tests

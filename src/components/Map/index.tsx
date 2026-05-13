@@ -333,13 +333,23 @@ function MapContent({
     const host = map.getContainer().parentElement as HTMLElement | null
     if (!host) return
     host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
-    document.body.classList.toggle('map-fullscreen-active', isPseudoFullscreen)
     map.invalidateSize()
     return () => {
       host.classList.remove('map-container--pseudo-fullscreen')
-      document.body.classList.remove('map-fullscreen-active')
     }
   }, [map, isPseudoFullscreen])
+
+  // `map-fullscreen-active` must track *any* fullscreen (native or pseudo).
+  // Native fullscreen uses `.page-section` as the element, so `.layout__header`
+  // is outside the fullscreen subtree and selectors like
+  // `.page-section.passenger:fullscreen .layout__header` never match.
+  useEffect(() => {
+    document.body.classList.toggle('map-fullscreen-active', isFullscreen)
+    map.invalidateSize()
+    return () => {
+      document.body.classList.remove('map-fullscreen-active')
+    }
+  }, [map, isFullscreen])
 
   useEffect(() => {
     setShowRouteInfo(false)
