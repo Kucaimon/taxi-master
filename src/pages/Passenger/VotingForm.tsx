@@ -148,6 +148,7 @@ const VotingForm = function VotingForm({
     const carClass = clientOrderSelectors.carClass(state)
     const seats = clientOrderSelectors.seats(state)
     const customerPrice = clientOrderSelectors.customerPrice(state)
+    const pickupTip = clientOrderSelectors.pickupTip(state)
 
     let error = false
     if (!from?.address) {
@@ -202,6 +203,8 @@ const VotingForm = function VotingForm({
           fromShortAddress: from?.shortAddress,
           toShortAddress: to?.shortAddress,
           customer_price: customerPrice,
+          // Incentive for driving to pickup before the meter starts (local taxi rules).
+          pickup_tip: pickupTip,
         },
         b_voting: voting,
       })

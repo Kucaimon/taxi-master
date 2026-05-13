@@ -350,6 +350,7 @@ export default {
   PICK_UP: 'pick_up',
   PICK_UP_ORDER: 'pick_up_order',
   PICK_UP_PACKAGE: 'pick_up_package',
+  PICKUP_TIP: 'pickup_tip',
   PINNED: 'pinned',
   PLASTIC_BOX: 'plastic_box',
   PLASTIC_CONTEINERS_LARGE: 'plastic_conteiners_large',

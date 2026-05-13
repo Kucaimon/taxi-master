@@ -32,6 +32,7 @@ const defaultRecord: IClientOrderState = {
   phone: null,
   phoneEdited: false,
   customerPrice: null,
+  pickupTip: null,
   selectedOrder: null,
   status: EStatuses.Default,
   message: '',
@@ -45,6 +46,7 @@ const record = Record<IClientOrderState>({
   phone: getItem('state.clientOrder.phone', defaultRecord.phone),
   customerPrice:
     getItem('state.clientOrder.customerPrice', defaultRecord.customerPrice),
+  pickupTip: getItem('state.clientOrder.pickupTip', defaultRecord.pickupTip),
 })
 
 export default function reducer(
@@ -196,6 +198,9 @@ export default function reducer(
     case ActionTypes.SET_CUSTOMER_PRICE:
       return state
         .set('customerPrice', payload)
+    case ActionTypes.SET_PICKUP_TIP:
+      return state
+        .set('pickupTip', payload)
     case ActionTypes.SET_SELECTED_ORDER:
       return state
         .set('selectedOrder', payload)
@@ -218,6 +223,7 @@ export default function reducer(
         .set('comments', defaultRecord.comments)
         .set('time', defaultRecord.time)
         .set('customerPrice', defaultRecord.customerPrice)
+        .set('pickupTip', defaultRecord.pickupTip)
         .set('selectedOrder', defaultRecord.selectedOrder)
     default:
       return state

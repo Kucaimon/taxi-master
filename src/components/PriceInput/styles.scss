@@ -31,10 +31,45 @@
     flex: 1 1 auto;
   }
 
-  &--l-only-customer &__container--estimate,
-  &--l-only-customer &__container--customer {
+  &--l-both &__container,
+  &--l-one-filled-draft-other &__container {
     flex: 1 1 0;
     min-width: 0;
+  }
+
+  &--l-both &__container--estimate,
+  &--l-one-filled-draft-other &__container--estimate {
+    flex: 2 1 0;
+  }
+
+  &--l-only-customer &__container--estimate {
+    flex: 5 1 0;
+    min-width: 0;
+  }
+
+  &--l-only-customer &__container--customer {
+    flex: 3 1 0;
+    min-width: 0;
+  }
+
+  &--l-only-customer &__container--pickup {
+    @extend %price-input__icon-cell;
+    @extend %price-input__hidden-segment;
+  }
+
+  &--l-only-pickup &__container--estimate {
+    flex: 5 1 0;
+    min-width: 0;
+  }
+
+  &--l-only-pickup &__container--pickup {
+    flex: 3 1 0;
+    min-width: 0;
+  }
+
+  &--l-only-pickup &__container--customer {
+    @extend %price-input__icon-cell;
+    @extend %price-input__hidden-segment;
   }
 
   &--l-icons &__container--estimate {
@@ -44,7 +79,8 @@
     cursor: default;
   }
 
-  &--l-icons &__container--customer {
+  &--l-icons &__container--customer,
+  &--l-icons &__container--pickup {
     @extend %price-input__icon-cell;
     @extend %price-input__hidden-segment;
   }
@@ -57,6 +93,26 @@
   &--l-draft-customer &__container--customer {
     flex: 1 1 0;
     min-width: 0;
+  }
+
+  &--l-draft-customer &__container--pickup {
+    @extend %price-input__icon-cell;
+    @extend %price-input__hidden-segment;
+  }
+
+  &--l-draft-pickup &__container--estimate {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &--l-draft-pickup &__container--pickup {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &--l-draft-pickup &__container--customer {
+    @extend %price-input__icon-cell;
+    @extend %price-input__hidden-segment;
   }
 
   &__container {

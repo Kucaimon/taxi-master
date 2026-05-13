@@ -2,6 +2,7 @@ import store from '../state'
 import CATEGORIES from './categories'
 import TRANSLATION from './translation'
 import { configSelectors } from '../state/config'
+import { LANG_VLS_FALLBACKS } from './langVlsFallbacks'
 
 interface IOptions {
   /** Does result.toLowerCase() */
@@ -89,12 +90,27 @@ function t(id: string, options: IOptions = {}) {
   }
 }
 
+/** Like `t` for default `lang_vls` keys, with a static fallback when the key is missing server-side. */
+function tLangVls(id: string): string {
+  const primary = t(id)
+  if (primary !== 'Error')
+    return primary
+  const key = id.split('.').pop() || id
+  const fb = LANG_VLS_FALLBACKS[key]
+  if (!fb)
+    return 'Error'
+  const language = configSelectors.language(store.getState())
+  const iso = (language?.iso || '').toLowerCase()
+  return iso.startsWith('ru') ? fb.ru : fb.en
+}
+
 // TODO get back
 
 // const castedTranslation = T as any
 
 export {
   t,
+  tLangVls,
   TRANSLATION,
 }
 

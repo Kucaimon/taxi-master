@@ -31,6 +31,8 @@ export const phone = createSelector(
 )
 export const customerPrice =
   createSelector(moduleSelector, state => state.customerPrice)
+export const pickupTip =
+  createSelector(moduleSelector, state => state.pickupTip)
 export const selectedOrder =
   createSelector(moduleSelector, state => state.selectedOrder)
 export const status = createSelector(moduleSelector, state => state.status)

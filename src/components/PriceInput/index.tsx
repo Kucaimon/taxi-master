@@ -12,7 +12,7 @@ import {
   clientOrderSelectors,
   clientOrderActionCreators,
 } from '../../state/clientOrder'
-import { t, TRANSLATION } from '../../localization'
+import { t, tLangVls, TRANSLATION } from '../../localization'
 import Input, { EInputTypes, EInputStyles } from '../Input'
 import './styles.scss'
 
@@ -22,10 +22,12 @@ const mapStateToProps = (state: IRootState) => ({
   time: clientOrderSelectors.time(state),
   carClass: clientOrderSelectors.carClass(state),
   customerPrice: clientOrderSelectors.customerPrice(state),
+  pickupTip: clientOrderSelectors.pickupTip(state),
 })
 
 const mapDispatchToProps = {
   setCustomerPrice: clientOrderActionCreators.setCustomerPrice,
+  setPickupTip: clientOrderActionCreators.setPickupTip,
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps)
@@ -34,20 +36,41 @@ interface IProps extends ConnectedProps<typeof connector> {
   className?: string
 }
 
-type TPriceLayout = 'single' | 'icons' | 'draftCustomer' | 'onlyCustomer'
+type TPriceLayout =
+  | 'single'
+  | 'icons'
+  | 'draftCustomer'
+  | 'draftPickup'
+  | 'onlyCustomer'
+  | 'onlyPickup'
+  | 'both'
+  | 'oneFilledDraftOther'
 
 function computeLayout(
-  showCustomerPrice: boolean,
+  showExtras: boolean,
   customerPrice: number | null,
-  draftOpen: boolean,
+  pickupTip: number | null,
+  draftOpen: 'customer' | 'pickup' | null,
 ): TPriceLayout {
   const c = typeof customerPrice === 'number'
-  if (!showCustomerPrice)
+  const p = typeof pickupTip === 'number'
+  if (!showExtras)
     return 'single'
-  if (c)
-    return 'onlyCustomer'
-  if (draftOpen)
+  if (c && p)
+    return 'both'
+  if (
+    (c && !p && draftOpen === 'pickup') ||
+    (!c && p && draftOpen === 'customer')
+  )
+    return 'oneFilledDraftOther'
+  if (!c && !p && draftOpen === 'customer')
     return 'draftCustomer'
+  if (!c && !p && draftOpen === 'pickup')
+    return 'draftPickup'
+  if (c && !p && draftOpen === null)
+    return 'onlyCustomer'
+  if (!c && p && draftOpen === null)
+    return 'onlyPickup'
   return 'icons'
 }
 
@@ -57,7 +80,9 @@ function PriceInput({
   time,
   carClass,
   customerPrice,
+  pickupTip,
   setCustomerPrice,
+  setPickupTip,
   className,
 }: IProps) {
   const { value: payment } = useMemo(() => getPayment(
@@ -68,28 +93,45 @@ function PriceInput({
     carClass,
   ), [from, to, time, carClass])
 
-  const showCustomerPrice = SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE
-  const [draftCustomerOpen, setDraftCustomerOpen] = useState(false)
+  const showExtras = SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE
+  const [draftOpen, setDraftOpen] = useState<'customer' | 'pickup' | null>(null)
   const customerInputRef = useRef<HTMLInputElement>(null)
+  const pickupInputRef = useRef<HTMLInputElement>(null)
 
   const layout = useMemo(
-    () => computeLayout(showCustomerPrice, customerPrice, draftCustomerOpen),
-    [showCustomerPrice, customerPrice, draftCustomerOpen],
+    () => computeLayout(showExtras, customerPrice, pickupTip, draftOpen),
+    [showExtras, customerPrice, pickupTip, draftOpen],
   )
 
   const focusCustomer = useCallback(() => {
-    setDraftCustomerOpen(true)
+    setDraftOpen('customer')
     requestAnimationFrame(() => customerInputRef.current?.focus())
   }, [])
 
-  const scheduleCollapseDraft = useCallback(() => {
-    window.setTimeout(() => {
-      if (typeof customerPrice !== 'number')
-        setDraftCustomerOpen(false)
-    }, 200)
-  }, [customerPrice])
+  const focusPickup = useCallback(() => {
+    setDraftOpen('pickup')
+    requestAnimationFrame(() => pickupInputRef.current?.focus())
+  }, [])
 
-  const customerShellActive = layout === 'icons'
+  const scheduleCollapseDraft = useCallback((
+    kind: 'customer' | 'pickup',
+  ) => {
+    window.setTimeout(() => {
+      if (kind === 'customer' && typeof customerPrice !== 'number')
+        setDraftOpen(d => (d === 'customer' ? null : d))
+      if (kind === 'pickup' && typeof pickupTip !== 'number')
+        setDraftOpen(d => (d === 'pickup' ? null : d))
+    }, 200)
+  }, [customerPrice, pickupTip])
+
+  const customerShellActive =
+    layout === 'icons' ||
+    layout === 'draftPickup' ||
+    layout === 'onlyPickup'
+  const pickupShellActive =
+    layout === 'icons' ||
+    layout === 'draftCustomer' ||
+    layout === 'onlyCustomer'
 
   const layoutClass = `price-input--l-${layout}`
 
@@ -106,34 +148,63 @@ function PriceInput({
           }`,
         }}
       />
-      {showCustomerPrice && (
-        <PriceInputItem
-          variant="customer"
-          containerProps={customerShellActive ? {
-            role: 'button',
-            tabIndex: 0,
-            onClick: e => {
-              e.preventDefault()
-              focusCustomer()
-            },
-            onKeyDown: e => {
-              if (e.key === 'Enter' || e.key === ' ') {
+      {showExtras && (
+        <>
+          <PriceInputItem
+            variant="customer"
+            containerProps={customerShellActive ? {
+              role: 'button',
+              tabIndex: 0,
+              onClick: e => {
                 e.preventDefault()
                 focusCustomer()
-              }
-            },
-          } : undefined}
-          inputProps={{
-            ref: customerInputRef,
-            value: customerPrice ?? '',
-            placeholder: t(TRANSLATION.CUSTOMER_PRICE),
-            onBlur: scheduleCollapseDraft,
-          }}
-          onChange={value => {
-            setCustomerPrice(value as number | null)
-          }}
-          inputType={EInputTypes.Number}
-        />
+              },
+              onKeyDown: e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  focusCustomer()
+                }
+              },
+            } : undefined}
+            inputProps={{
+              ref: customerInputRef,
+              value: customerPrice ?? '',
+              placeholder: t(TRANSLATION.CUSTOMER_PRICE),
+              onBlur: () => scheduleCollapseDraft('customer'),
+            }}
+            onChange={value => {
+              setCustomerPrice(value as number | null)
+            }}
+            inputType={EInputTypes.Number}
+          />
+          <PriceInputItem
+            variant="pickup"
+            containerProps={pickupShellActive ? {
+              role: 'button',
+              tabIndex: 0,
+              onClick: e => {
+                e.preventDefault()
+                focusPickup()
+              },
+              onKeyDown: e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  focusPickup()
+                }
+              },
+            } : undefined}
+            inputProps={{
+              ref: pickupInputRef,
+              value: pickupTip ?? '',
+              placeholder: tLangVls(TRANSLATION.PICKUP_TIP),
+              onBlur: () => scheduleCollapseDraft('pickup'),
+            }}
+            onChange={value => {
+              setPickupTip(value as number | null)
+            }}
+            inputType={EInputTypes.Number}
+          />
+        </>
       )}
     </div>
   )
@@ -143,7 +214,7 @@ export default connector(PriceInput)
 
 interface IItemProps extends React.ComponentProps<typeof Input> {
   disabled?: boolean
-  variant?: 'estimate' | 'customer'
+  variant?: 'estimate' | 'customer' | 'pickup'
   containerProps?: React.HTMLAttributes<HTMLDivElement>
 }
 
@@ -164,6 +235,7 @@ function PriceInputItem({
           'price-input__container--disabled': disabled,
           'price-input__container--estimate': variant === 'estimate',
           'price-input__container--customer': variant === 'customer',
+          'price-input__container--pickup': variant === 'pickup',
         },
       )}
     >
