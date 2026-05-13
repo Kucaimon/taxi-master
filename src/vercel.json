@@ -1,0 +1,24 @@
+{
+    "buildCommand": "CI=false npm run build",
+    "outputDirectory": "build",
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                { "key": "Access-Control-Allow-Credentials", "value": "true" },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "https://chat.itest24.com/"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "no-store, max-age=0"
+                }
+            ]
+        }
+    ]
+}
