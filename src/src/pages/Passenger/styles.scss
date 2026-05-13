@@ -1,13 +1,21 @@
 @import "../../tools/mixins";
 
 $formPlaceholderHeight: 208px - 16px;
-$formContainerTop: -40px - 8px - 16px;
 
 .passenger {
-  &__mini-orders {
-    position: absolute;
-    z-index: 1;
-    margin-bottom: 20px;
+  // Fill `layout__content` reliably on iOS flex layout (default
+  // `min-height: auto` can prevent the percentage-height chain from
+  // matching the visible viewport, which breaks swipe bounds + the
+  // absolute bottom form anchor).
+  flex: 1 1 auto;
+  min-height: 0;
+
+  // Compatibility hook for the new ActiveOrdersOverlay. Positioning
+  // and safe-area handling now live inside the component itself; this
+  // class only exists to give callers a stable selector for tests
+  // and possible future tweaks.
+  &__active-orders {
+    // Intentionally empty.
   }
 
   &__form-map-container {
@@ -25,7 +33,9 @@ $formContainerTop: -40px - 8px - 16px;
 
   &__form-container {
     position: absolute;
-    top: $formContainerTop;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -35,7 +45,9 @@ $formContainerTop: -40px - 8px - 16px;
     min-height: min(520px, 100%);
     max-height: 100%;
     padding-top: 8px;
-    transition: top 0.5s ease-in-out;
+    // Fill flex slack below `&__draggable` (min-height vs max-height) so map
+    // does not show through as a hairline.
+    background-color: #ffffff;
   }
 
   &__draggable {
@@ -47,6 +59,32 @@ $formContainerTop: -40px - 8px - 16px;
     padding: 16px;
     border-radius: 16px 16px 0 0;
     background-color: #ffffff;
+  }
+
+  @media (max-width: 768px) {
+    &__form-map-container {
+      margin-top: 0;
+    }
+
+    // Show more of the form by default on phones so users
+    // don't feel like the map takes the whole screen.
+    &__form-placeholder {
+      height: 240px;
+    }
+
+    &__form-container {
+      min-height: min(560px, 100%);
+      // Was 0 — boundary chips sat flush against the map (client screenshot).
+      padding-top: 12px;
+      row-gap: 12px;
+    }
+
+    &__draggable {
+      max-height: calc(100vh - 160px - env(safe-area-inset-bottom, 0px));
+      max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      overscroll-behavior: contain;
+    }
   }
 
   &__swipe-line {
