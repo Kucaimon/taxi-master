@@ -183,15 +183,24 @@ export function useSwipe(
       maxHeight: number,
       currentY = 0,
       deltaY = 0,
-      canMove = false
+      canMove = false,
+      activePointerId: number | null = null
 
-    function start(e: TouchEvent) {
+    function targetInNoSwipe(target: EventTarget | null) {
+      if (!(target instanceof Node))
+        return false
       for (const noSwipeElement of noSwipeElements?.current ?? [])
-        if (noSwipeElement.contains(e.target as Node)) {
-          canMove = false
-          return
-        }
-      startY = e.touches[0].clientY + draggableValue.scrollTop
+        if (noSwipeElement.contains(target))
+          return true
+      return false
+    }
+
+    function start(clientY: number, target: EventTarget | null) {
+      if (targetInNoSwipe(target)) {
+        canMove = false
+        return
+      }
+      startY = clientY + draggableValue.scrollTop
       startTime = Date.now()
       ;[minHeight, maxHeight] = getLiftingHeightBounds()
       currentY = isExpandedRef.current ? -maxHeight : -minHeight
@@ -202,9 +211,9 @@ export function useSwipe(
       transform(currentY, [minHeight, maxHeight])
     }
 
-    const move = _.throttle((e: TouchEvent) => {
+    const move = _.throttle((clientY: number) => {
       if (!canMove) return
-      deltaY = e.touches[0].clientY - startY
+      deltaY = clientY - startY
       transform(currentY + deltaY, [minHeight, maxHeight])
     }, 16)
 
@@ -228,19 +237,55 @@ export function useSwipe(
         transform(currentY)
       sheetTouchingRef.current = false
       canMove = false
+      activePointerId = null
     }
 
-    draggableValue.addEventListener('touchstart', start)
-    document.addEventListener('touchmove', move)
-    document.addEventListener('touchend', end)
-    document.addEventListener('touchcancel', end)
+    function onPointerDown(e: PointerEvent) {
+      if (!e.isPrimary || e.button !== 0)
+        return
+      if (targetInNoSwipe(e.target))
+        return
+      start(e.clientY, e.target)
+      if (!canMove)
+        return
+      activePointerId = e.pointerId
+      try {
+        draggableValue.setPointerCapture(e.pointerId)
+      } catch {
+        /* setPointerCapture can throw if element disconnected */
+      }
+    }
+
+    const onPointerMove = _.throttle((e: PointerEvent) => {
+      if (!canMove || e.pointerId !== activePointerId)
+        return
+      move(e.clientY)
+    }, 16)
+
+    function onPointerUp(e: PointerEvent) {
+      if (e.pointerId !== activePointerId)
+        return
+      try {
+        draggableValue.releasePointerCapture(e.pointerId)
+      } catch {
+        /* ignore */
+      }
+      move.cancel()
+      end()
+    }
+
+    draggableValue.addEventListener('pointerdown', onPointerDown)
+    draggableValue.addEventListener('pointermove', onPointerMove)
+    draggableValue.addEventListener('pointerup', onPointerUp)
+    draggableValue.addEventListener('pointercancel', onPointerUp)
 
     return () => {
       move.cancel()
-      draggableValue.removeEventListener('touchstart', start)
-      document.removeEventListener('touchmove', move)
-      document.removeEventListener('touchend', end)
-      document.removeEventListener('touchcancel', end)
+      onPointerMove.cancel()
+      draggableValue.removeEventListener('pointerdown', onPointerDown)
+      draggableValue.removeEventListener('pointermove', onPointerMove)
+      draggableValue.removeEventListener('pointerup', onPointerUp)
+      draggableValue.removeEventListener('pointercancel', onPointerUp)
     }
   }, [
     draggable, element, noSwipeElements, speed,
