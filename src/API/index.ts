@@ -80,7 +80,6 @@ export {
   setOrderState,
   setOrderRating,
   setWaitingTime,
-  raiseBookingPickupTip,
 } from './order'
 export {
   getAreasIdsBetweenPoints,

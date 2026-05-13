@@ -77,7 +77,7 @@ function ActiveOrdersOverlay({
   }, [setSelectedOrder, setCancelModal])
 
   const handlePickupTipPlus = useCallback(async(order: IOrder) => {
-    const current = order.b_options?.pickup_tip ?? 0
+    const current = Number(order.b_options?.submitPrice) || 0
     const next = current + 1
     const body = [
       tLangVls(TRANSLATION.PICKUP_TIP_CONFIRM_BODY),

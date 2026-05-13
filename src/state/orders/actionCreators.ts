@@ -2,7 +2,9 @@ import { ParametersExceptFirst, TAction } from '../../types'
 import { IOrder } from '../../types/types'
 import { IResponse } from '../../types/api'
 import { candidateMode }  from '../../tools/order'
+import { reverseConvertOrder } from '../../tools/convert'
 import * as API from '../../API'
+import { t, TRANSLATION } from '../../localization'
 import { IRootState, IDispatch } from '..'
 import { watch as watchGeolocation } from '../geolocation/actionCreators'
 import { ActionTypes } from './constants'
@@ -71,11 +73,28 @@ export const cancel = (
 
 export const raisePickupTip = (
   id: IOrder['b_id'],
-  pickup_tip: number,
-) => async(dispatch: IDispatch) => {
+  pickupTipAmount: number,
+) => async(dispatch: IDispatch, getState: () => IRootState) => {
   dispatch({ type: ActionTypes.MUTATION_START, payload: id })
   try {
-    await API.raiseBookingPickupTip(id, pickup_tip)
+    const order = orderSelector(getState(), id)
+    if (!order) {
+      dispatch({ type: ActionTypes.MUTATION_FAIL, payload: id })
+      throw new Error(t(TRANSLATION.ERROR))
+    }
+    const rev = reverseConvertOrder(order)
+    await API.editOrder(id, {
+      b_start_address: rev.b_start_address,
+      b_start_latitude: rev.b_start_latitude,
+      b_start_longitude: rev.b_start_longitude,
+      b_destination_address: rev.b_destination_address,
+      b_destination_latitude: rev.b_destination_latitude,
+      b_destination_longitude: rev.b_destination_longitude,
+      b_options: {
+        ...order.b_options,
+        submitPrice: pickupTipAmount,
+      },
+    })
     dispatch({ type: ActionTypes.UPDATE_SUCCESS, payload: id })
   } catch (error) {
     dispatch({ type: ActionTypes.MUTATION_FAIL, payload: id })

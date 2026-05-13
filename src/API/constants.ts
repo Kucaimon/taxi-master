@@ -9,9 +9,4 @@ export enum EBookingActions {
   SetRate = 'set_rate',
   SetTips = 'set_tips',
   Edit = 'edit',
-  /**
-   * Passenger raises `b_options.pickup_tip` on an active booking.
-   * Backend must accept this action on `POST /drive/get/:id` (see API module).
-   */
-  RaisePickupTip = 'raise_pickup_tip',
 }

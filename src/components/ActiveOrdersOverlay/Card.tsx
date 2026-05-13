@@ -118,7 +118,7 @@ function ActiveOrderCardImpl({
     onPickupTipPlus(order)
   }, [order, onPickupTipPlus])
 
-  const pickupTipCurrent = order.b_options?.pickup_tip ?? 0
+  const pickupTipCurrent = Number(order.b_options?.submitPrice) || 0
 
   return (
     <article
@@ -272,7 +272,7 @@ const ActiveOrderCard = React.memo(ActiveOrderCardImpl, (prev, next) => {
   if (a.b_passengers_count !== b.b_passengers_count) return false
   if (a.b_voting !== b.b_voting) return false
   if (a.b_options?.customer_price !== b.b_options?.customer_price) return false
-  if (a.b_options?.pickup_tip !== b.b_options?.pickup_tip) return false
+  if (a.b_options?.submitPrice !== b.b_options?.submitPrice) return false
   if (a.b_car_class !== b.b_car_class) return false
   if (a.b_start_address !== b.b_start_address) return false
   if (a.b_destination_address !== b.b_destination_address) return false
