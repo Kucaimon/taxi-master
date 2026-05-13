@@ -203,8 +203,8 @@ const VotingForm = function VotingForm({
           fromShortAddress: from?.shortAddress,
           toShortAddress: to?.shortAddress,
           customer_price: customerPrice,
-          // Incentive for driving to pickup before the meter starts (local taxi rules).
-          pickup_tip: pickupTip,
+          // Backend's existing key for the pickup tip — see chat 13 May.
+          submitPrice: pickupTip,
         },
         b_voting: voting,
       })

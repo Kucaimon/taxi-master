@@ -191,7 +191,6 @@ export interface IDriver {
 }
 
 export interface IOptions {
-  submitPrice?: string;
   fromShortAddress?: string
   toShortAddress?: string
   courier_auto?: string | ECourierAutoTypes
@@ -219,6 +218,11 @@ export interface IOptions {
   cost?: number
   is_loading_needs?: boolean
   customer_price?: number
+  /**
+   * Backend `b_options` key for the passenger-declared price / pickup incentive (minor units / same as price).
+   * @see team chat 13 May — wire name is `submitPrice`, not `pickup_tip`.
+   */
+  submitPrice?: number | string
   moveType?: EMoveTypes
   steps?: string
   elevator?: IElevatorState
