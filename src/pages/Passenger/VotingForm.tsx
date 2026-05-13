@@ -34,6 +34,39 @@ import PriceInput from '../../components/PriceInput'
 import { openConfirmationModal } from '../../components/modals/confirmationModalRuntime'
 import './voting-form.scss'
 
+function OrderVoteAndSubmitButtons({
+  available,
+  submitting,
+  submit,
+}: {
+  available: boolean
+  submitting: boolean
+  submit: (asVote?: boolean) => void
+}) {
+  return (
+    <>
+      <Button
+        wrapperProps={{ className: 'passenger-voting-form__order-button' }}
+        buttonStyle={EButtonStyles.RedDesign}
+        type="submit"
+        checkLogin={false}
+        text={t(TRANSLATION.VOTE, { toUpper: false })}
+        onClick={() => submit(true)}
+        disabled={!available || submitting}
+      />
+      <Button
+        wrapperProps={{ className: 'passenger-voting-form__order-button' }}
+        buttonStyle={EButtonStyles.RedDesign}
+        type="submit"
+        checkLogin={false}
+        text={t(TRANSLATION.TO_ORDER, { toUpper: false })}
+        onClick={() => submit()}
+        disabled={!available || submitting}
+      />
+    </>
+  )
+}
+
 const mapStateToProps = (state: IRootState) => ({
   activeOrders: ordersSelectors.activeOrders(state),
   from: clientOrderSelectors.from(state),
@@ -283,41 +316,18 @@ const VotingForm = function VotingForm({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const submitButtons = (
-    <div className="passenger-voting-form__order-button-wrapper">
-      {useMemo(() =>
-        <>
-          <Button
-            wrapperProps={{ className: 'passenger-voting-form__order-button' }}
-            buttonStyle={EButtonStyles.RedDesign}
-            type="submit"
-            checkLogin={false}
-            text={t(TRANSLATION.VOTE, { toUpper: false })}
-            onClick={() => submit(true)}
-            disabled={!available || submitting}
-          />
-          <Button
-            wrapperProps={{ className: 'passenger-voting-form__order-button' }}
-            buttonStyle={EButtonStyles.RedDesign}
-            type="submit"
-            checkLogin={false}
-            text={t(TRANSLATION.TO_ORDER, { toUpper: false })}
-            onClick={() => submit()}
-            disabled={!available || submitting}
-          />
-        </>
-      , [available, submitting, submit])}
-      {submitError &&
-        <span className="passenger-voting-form__order-button-error">
-          {submitError}
-        </span>
-      }
-    </div>
-  )
+  const orderError = submitError &&
+    <span className="passenger-voting-form__order-button-error">
+      {submitError}
+    </span>
 
   return (
     <form
-      className="passenger-voting-form"
+      className={
+        isExpanded ?
+          'passenger-voting-form passenger-voting-form--expanded' :
+          'passenger-voting-form'
+      }
       onSubmit={event => {
         event.preventDefault()
       }}
@@ -345,9 +355,23 @@ const VotingForm = function VotingForm({
           , [syncTo, toError])}
         </div>
 
-        {useMemo(() => !isExpanded && <ShortInfo />, [isExpanded])}
+        {useMemo(() => !isExpanded &&
+          <div className="passenger-voting-form__short-info-peek">
+            <ShortInfo />
+          </div>
+        , [isExpanded])}
 
-        {!isExpanded && submitButtons}
+        {!isExpanded &&
+          <div className="passenger-voting-form__order-peek">
+            <div className="passenger-voting-form__order-button-wrapper">
+              <OrderVoteAndSubmitButtons
+                available={available}
+                submitting={submitting}
+                submit={submit}
+              />
+            </div>
+            {orderError}
+          </div>}
       </div>
 
       <div className="passenger-voting-form__seats-and-time">
@@ -493,7 +517,16 @@ const VotingForm = function VotingForm({
         />
       , [handlePickupTipBlur])}
 
-      {isExpanded && submitButtons}
+      <div className="passenger-voting-form__order-footer">
+        <div className="passenger-voting-form__order-button-wrapper">
+          <OrderVoteAndSubmitButtons
+            available={available}
+            submitting={submitting}
+            submit={submit}
+          />
+        </div>
+        {orderError}
+      </div>
 
     </form>
   )

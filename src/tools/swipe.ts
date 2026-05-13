@@ -21,6 +21,42 @@ export function useSwipe(
   const [isExpanded, setIsExpanded] = useState(false)
   const isExpandedRef = useRef(false)
   isExpandedRef.current = isExpanded
+  const sheetTouchingRef = useRef(false)
+
+  const syncSheetPhaseClasses = useCallback((
+    translate: number,
+    min: number,
+    max: number,
+    touching: boolean,
+  ) => {
+    const draggableEl = draggable.current
+    if (!draggableEl)
+      return
+    const eps = 4
+    const collapsedY = -min
+    const expandedY = -max
+    const collapsed =
+      translate >= collapsedY - eps
+    const expanded =
+      translate <= expandedY + eps
+    const between = !collapsed && !expanded
+    draggableEl.classList.toggle(
+      'passenger__draggable--sheet-collapsed',
+      collapsed,
+    )
+    draggableEl.classList.toggle(
+      'passenger__draggable--sheet-expanded',
+      expanded,
+    )
+    draggableEl.classList.toggle(
+      'passenger__draggable--sheet-between',
+      between,
+    )
+    draggableEl.classList.toggle(
+      'passenger__draggable--sheet-touching',
+      touching,
+    )
+  }, [draggable])
 
   const getLiftingHeightBounds = useCallback((): [min: number, max: number] => {
     // `offsetParent` is `null` for `position: fixed` in normal cases.
@@ -58,19 +94,32 @@ export function useSwipe(
       let minimizedParent: HTMLElement | null = minPartEl
       while (minimizedParent && minimizedParent !== el) {
         minimized += minimizedParent.offsetTop
-        minimizedParent = minimizedParent.offsetParent as HTMLElement | null
+        const next: HTMLElement | null =
+          minimizedParent.offsetParent as HTMLElement | null
+        if (!next) {
+          // Chain can end at `null` before `el` (e.g. `position: fixed` gaps).
+          // Falling back to layout rects keeps a real collapsed lift instead of
+          // `[0, max]` / duplicate chrome during drag.
+          const partRect = minPartEl.getBoundingClientRect()
+          const elRect = el.getBoundingClientRect()
+          minimized = partRect.bottom - elRect.top
+          break
+        }
+        minimizedParent = next
       }
     }
 
     let min = minimized - visible
+    const maxLift = expanded - visible
     // Integer layout math can make `minimized` a hair larger than `visible`
     // on real devices; a tiny positive `min` becomes translateY(-min) and
     // lifts the sheet, exposing map tiles in a 1–3px strip at the viewport
-    // bottom. Snap only negligible positives — real "peek" offsets are larger.
-    if (min > 0 && min <= 3)
+    // bottom. Only snap when there is still a meaningful drag range — never
+    // zero `min` when that would erase the only collapsed offset.
+    if (min > 0 && min <= 3 && maxLift - min >= 16)
       min = 0
 
-    return [min, expanded - visible]
+    return [min, maxLift]
   }, [element, minimizedPart])
 
   const transform = useCallback((
@@ -89,14 +138,16 @@ export function useSwipe(
       Math.max(Math.min(value, -min), -max),
     )
     element.current.style.transform = `translateY(${translate}px)`
+    syncSheetPhaseClasses(translate, min, max, sheetTouchingRef.current)
     if (translate > -max) {
       draggable.current.style.overflow = 'hidden'
       draggable.current.scrollTop = 0
     } else
       draggable.current.style.overflow = ''
-  }, [element, draggable])
+  }, [element, draggable, syncSheetPhaseClasses])
 
   const update = useCallback(() => {
+    sheetTouchingRef.current = false
     transform(isExpandedRef.current ? -Infinity : Infinity)
   }, [transform])
 
@@ -146,14 +197,16 @@ export function useSwipe(
       currentY = isExpandedRef.current ? -maxHeight : -minHeight
       deltaY = 0
       canMove = true
+      sheetTouchingRef.current = true
       elementValue.style.transition = 'transform 0.05s linear'
+      transform(currentY, [minHeight, maxHeight])
     }
 
     const move = _.throttle((e: TouchEvent) => {
       if (!canMove) return
       deltaY = e.touches[0].clientY - startY
       transform(currentY + deltaY, [minHeight, maxHeight])
-    }, 50)
+    }, 16)
 
     function end() {
       if (!canMove) return
@@ -173,17 +226,21 @@ export function useSwipe(
           setIsExpanded(true)
       } else
         transform(currentY)
+      sheetTouchingRef.current = false
       canMove = false
     }
 
     draggableValue.addEventListener('touchstart', start)
     document.addEventListener('touchmove', move)
     document.addEventListener('touchend', end)
+    document.addEventListener('touchcancel', end)
 
     return () => {
+      move.cancel()
       draggableValue.removeEventListener('touchstart', start)
       document.removeEventListener('touchmove', move)
       document.removeEventListener('touchend', end)
+      document.removeEventListener('touchcancel', end)
     }
   }, [
     draggable, element, noSwipeElements, speed,
