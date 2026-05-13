@@ -34,6 +34,7 @@ const connector = connect(mapStateToProps, mapDispatchToProps)
 
 interface IProps extends ConnectedProps<typeof connector> {
   className?: string
+  onPickupTipBlur?: () => void | Promise<void>
 }
 
 type TPriceLayout =
@@ -84,6 +85,7 @@ function PriceInput({
   setCustomerPrice,
   setPickupTip,
   className,
+  onPickupTipBlur,
 }: IProps) {
   const { value: payment } = useMemo(() => getPayment(
     null,
@@ -197,7 +199,10 @@ function PriceInput({
               ref: pickupInputRef,
               value: pickupTip ?? '',
               placeholder: tLangVls(TRANSLATION.PICKUP_TIP),
-              onBlur: () => scheduleCollapseDraft('pickup'),
+              onBlur: () => {
+                scheduleCollapseDraft('pickup')
+                void onPickupTipBlur?.()
+              },
             }}
             onChange={value => {
               setPickupTip(value as number | null)

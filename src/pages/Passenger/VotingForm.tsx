@@ -9,7 +9,7 @@ import images from '../../constants/images'
 import SITE_CONSTANTS from '../../siteConstants'
 import { getPhoneNumberError } from '../../tools/utils'
 import * as API from '../../API'
-import { t, TRANSLATION } from '../../localization'
+import { t, tLangVls, TRANSLATION } from '../../localization'
 import { IRootState } from '../../state'
 import { modalsActionCreators } from '../../state/modals'
 import { userSelectors } from '../../state/user'
@@ -31,6 +31,7 @@ import ShortInfo from '../../components/ShortInfo'
 import SeatSlider from '../../components/SeatSlider'
 import CarClassSlider from '../../components/CarClassSlider'
 import PriceInput from '../../components/PriceInput'
+import { openConfirmationModal } from '../../components/modals/confirmationModalRuntime'
 import './voting-form.scss'
 
 const mapStateToProps = (state: IRootState) => ({
@@ -41,6 +42,7 @@ const mapStateToProps = (state: IRootState) => ({
   time: clientOrderSelectors.time(state),
   phone: clientOrderSelectors.phone(state),
   user: userSelectors.user(state),
+  pickupTip: clientOrderSelectors.pickupTip(state),
 })
 
 const mapDispatchToProps = {
@@ -51,6 +53,7 @@ const mapDispatchToProps = {
   createOrder: ordersActionCreators.create,
   setPhone: clientOrderActionCreators.setPhone,
   resetClientOrder: clientOrderActionCreators.reset,
+  setPickupTip: clientOrderActionCreators.setPickupTip,
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps)
@@ -73,6 +76,7 @@ const VotingForm = function VotingForm({
   time,
   phone,
   user,
+  pickupTip,
   setPickTimeModal,
   setCommentsModal,
   setLoginModal,
@@ -80,6 +84,7 @@ const VotingForm = function VotingForm({
   createOrder,
   setPhone,
   resetClientOrder,
+  setPickupTip,
   isExpanded,
   setIsExpanded,
   syncFrom,
@@ -141,6 +146,42 @@ const VotingForm = function VotingForm({
   }, [phone])
 
   const store = useStore<IRootState>()
+  const lastConfirmedPickupTipRef = useRef(0)
+
+  useEffect(() => {
+    if (pickupTip === null || pickupTip === 0)
+      lastConfirmedPickupTipRef.current = 0
+  }, [pickupTip])
+
+  const buildPickupTipConfirmModal = useCallback(() => ({
+    title: tLangVls(TRANSLATION.PICKUP_TIP_CONFIRM_TITLE),
+    message: tLangVls(TRANSLATION.PICKUP_TIP_CONFIRM_BODY),
+    confirmLabel: tLangVls(TRANSLATION.CONFIRM),
+    cancelLabel: tLangVls(TRANSLATION.CANCEL),
+    tone: 'info' as const,
+  }), [])
+
+  const handlePickupTipBlur = useCallback(async () => {
+    const state = store.getState()
+    const tipRaw = clientOrderSelectors.pickupTip(state)
+    const tip = tipRaw ?? 0
+    if (tip <= 0) return
+    if (lastConfirmedPickupTipRef.current === tip) return
+    try {
+      const ok = await openConfirmationModal(buildPickupTipConfirmModal())
+      if (ok)
+        lastConfirmedPickupTipRef.current = tip
+      else
+        setPickupTip(
+          lastConfirmedPickupTipRef.current > 0 ?
+            lastConfirmedPickupTipRef.current :
+            null,
+        )
+    } catch {
+      // Another confirmation is already open.
+    }
+  }, [store, setPickupTip, buildPickupTipConfirmModal])
+
   const submit = useCallback(async(voting = false) => {
     setSubmitError(null)
 
@@ -148,7 +189,7 @@ const VotingForm = function VotingForm({
     const carClass = clientOrderSelectors.carClass(state)
     const seats = clientOrderSelectors.seats(state)
     const customerPrice = clientOrderSelectors.customerPrice(state)
-    const pickupTip = clientOrderSelectors.pickupTip(state)
+    const pickupTipValue = clientOrderSelectors.pickupTip(state) ?? 0
 
     let error = false
     if (!from?.address) {
@@ -183,6 +224,19 @@ const VotingForm = function VotingForm({
 
     const startTime = moment(voting || time === 'now' ? undefined : time)
 
+    if (
+      pickupTipValue > 0 &&
+      lastConfirmedPickupTipRef.current !== pickupTipValue
+    ) {
+      try {
+        const ok = await openConfirmationModal(buildPickupTipConfirmModal())
+        if (!ok) return
+        lastConfirmedPickupTipRef.current = pickupTipValue
+      } catch {
+        return
+      }
+    }
+
     setSubmitting(true)
     try {
       const data = await createOrder({
@@ -204,7 +258,7 @@ const VotingForm = function VotingForm({
           toShortAddress: to?.shortAddress,
           customer_price: customerPrice,
           // Backend's existing key for the pickup tip — see chat 13 May.
-          submitPrice: pickupTip,
+          submitPrice: pickupTipValue,
         },
         b_voting: voting,
       })
@@ -222,8 +276,8 @@ const VotingForm = function VotingForm({
     setSubmitting(false)
   }, [
     from, to, comments, time, phone, user,
-    store, setLoginModal, createOrder,
-    setIsExpanded, onSubmit,
+    store, setLoginModal, createOrder, resetClientOrder,
+    setIsExpanded, onSubmit, buildPickupTipConfirmModal,
   ])
 
   const [submitting, setSubmitting] = useState(false)
@@ -433,8 +487,11 @@ const VotingForm = function VotingForm({
         )
       }, [phone, setPhone, user, phoneError, isPhoneRemembered, togglePhoneRemember])}
       {useMemo(() => SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE &&
-        <PriceInput className="passenger-voting-form__input" />
-      , [])}
+        <PriceInput
+          className="passenger-voting-form__input"
+          onPickupTipBlur={handlePickupTipBlur}
+        />
+      , [handlePickupTipBlur])}
 
       {isExpanded && submitButtons}
 
