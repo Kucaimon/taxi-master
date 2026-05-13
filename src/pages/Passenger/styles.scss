@@ -7,11 +7,11 @@
   // absolute bottom form anchor).
   flex: 1 1 auto;
   min-height: 0;
-  // Map : bottom slot = 75 : 25 (only in-flow children are map + placeholder;
+  // Map : bottom slot = 85 : 15 (only in-flow children are map + placeholder;
   // ActiveOrdersOverlay is `position:absolute` and skipped by flex sizing).
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 
   // Compatibility hook for the new ActiveOrdersOverlay. Positioning
   // and safe-area handling now live inside the component itself; this
@@ -23,23 +23,22 @@
 
   &__form-map-container {
     margin-top: -16px;
-    flex: 3 1 0%;
+    flex: 17 1 0%;
     min-height: 0;
     max-height: 100%;
     width: 100%;
     z-index: 0;
     // Default `.map-container` uses viewport height and ignores the flex row;
-    // pin the passenger map to this 75% row instead.
+    // pin the passenger map to this 85% row instead.
     height: 100%;
     box-sizing: border-box;
-    margin-bottom: 4px;
   }
 
   &__form-placeholder {
-    flex: 1 1 0%;
+    flex: 3 1 0%;
     min-height: 0;
     width: 100%;
-    // In-flow spacer for the lower 25% band; the sheet is `absolute` on top.
+    // In-flow spacer for the lower 15% band; the sheet is `absolute` on top.
     pointer-events: none;
   }
 
@@ -49,20 +48,18 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    row-gap: 10px;
-    overflow: hidden;
+    row-gap: 12px;
     width: 100%;
     min-height: 0;
     max-height: 100%;
-    padding-top: 24px;
-    background-color: #ffffff;
-    // Rounded top corners + soft shadow so the panel reads as a
-    // separate card under the map instead of a flat band glued to it.
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.06);
+    // Transparent shell: chips float over the map; only the draggable
+    // below is the white card. This is what kills the "chips glued to
+    // the map" look — there is no white band behind the chip row.
+    background-color: transparent;
+    padding: 0;
 
     .boundary-buttons {
-      margin-top: 4px;
+      margin: 0 12px;
     }
   }
 
@@ -72,31 +69,33 @@
     flex-direction: column;
     overflow: auto;
     row-gap: 16px;
-    padding: 16px;
+    padding: 20px 16px 16px;
     background-color: #ffffff;
+    // The draggable IS the visible bottom-sheet card; rounded top +
+    // soft shadow detach it from the map regardless of the 85/15 math.
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.06);
   }
 
   @media (max-width: 768px) {
-    gap: 12px;
+    gap: 10px;
 
     &__form-map-container {
       margin-top: 0;
-      margin-bottom: 6px;
     }
 
     &__form-container {
-      padding-top: 28px;
-      row-gap: 12px;
+      row-gap: 14px;
 
       .boundary-buttons {
-        margin-top: 6px;
+        margin: 0 12px;
       }
     }
 
     &__draggable {
-      max-height: calc(100vh - 160px - env(safe-area-inset-bottom, 0px));
-      max-height: calc(100dvh - 160px - env(safe-area-inset-bottom, 0px));
-      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      max-height: calc(100vh - 120px - env(safe-area-inset-bottom, 0px));
+      max-height: calc(100dvh - 120px - env(safe-area-inset-bottom, 0px));
+      padding: 22px 16px calc(16px + env(safe-area-inset-bottom, 0px));
       overscroll-behavior: contain;
     }
   }
