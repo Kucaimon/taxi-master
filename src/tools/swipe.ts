@@ -62,7 +62,15 @@ export function useSwipe(
       }
     }
 
-    return [minimized - visible, expanded - visible]
+    let min = minimized - visible
+    // Integer layout math can make `minimized` a hair larger than `visible`
+    // on real devices; a tiny positive `min` becomes translateY(-min) and
+    // lifts the sheet, exposing map tiles in a 1–3px strip at the viewport
+    // bottom. Snap only negligible positives — real "peek" offsets are larger.
+    if (min > 0 && min <= 3)
+      min = 0
+
+    return [min, expanded - visible]
   }, [element, minimizedPart])
 
   const transform = useCallback((

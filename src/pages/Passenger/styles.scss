@@ -45,6 +45,9 @@ $formContainerTop: -40px - 8px - 16px;
     max-height: 100%;
     padding-top: 8px;
     transition: top 0.5s ease-in-out;
+    // Fill flex slack below `&__draggable` (min-height vs max-height) so map
+    // does not show through as a hairline.
+    background-color: #ffffff;
   }
 
   &__draggable {
