@@ -69,6 +69,20 @@ export const cancel = (
   ...params: ParametersExceptFirst<typeof API.cancelDrive>
 ) => APIMutationThunk(() => API.cancelDrive(id, ...params), id)
 
+export const raisePickupTip = (
+  id: IOrder['b_id'],
+  pickup_tip: number,
+) => async(dispatch: IDispatch) => {
+  dispatch({ type: ActionTypes.MUTATION_START, payload: id })
+  try {
+    await API.raiseBookingPickupTip(id, pickup_tip)
+    dispatch({ type: ActionTypes.UPDATE_SUCCESS, payload: id })
+  } catch (error) {
+    dispatch({ type: ActionTypes.MUTATION_FAIL, payload: id })
+    throw error
+  }
+}
+
 export const take = (
   id: IOrder['b_id'],
   options: Parameters<typeof API.takeOrder>[1],

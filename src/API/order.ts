@@ -346,3 +346,30 @@ const _setWaitingTime = (
  * @param previous actual waiting time
  */
 export const setWaitingTime = apiMethod<typeof _setWaitingTime>(_setWaitingTime)
+
+/**
+ * Raises `b_options.pickup_tip` on an active booking via `POST /drive/get/:id`.
+ * Requires backend support for {@link EBookingActions.RaisePickupTip} (monotonic
+ * `pickup_tip` enforced server-side). Throws on `status === 'error'`.
+ */
+const _raiseBookingPickupTip = (
+  { formData }: IApiMethodArguments,
+  id: IOrder['b_id'],
+  pickup_tip: number,
+) => {
+  addToFormData(formData, {
+    action: EBookingActions.RaisePickupTip,
+    pickup_tip: String(pickup_tip),
+  })
+
+  return axios.post(`${Config.API_URL}/drive/get/${id}`, formData)
+    .then(res => res.data)
+    .then((data: { status?: string; message?: string }) => {
+      if (data.status === 'error')
+        throw new Error(data.message || 'pickup_tip_update_failed')
+      return data
+    })
+}
+export const raiseBookingPickupTip = apiMethod<typeof _raiseBookingPickupTip>(
+  _raiseBookingPickupTip,
+)

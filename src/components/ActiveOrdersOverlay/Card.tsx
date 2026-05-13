@@ -7,7 +7,7 @@ import {
   formatCurrency,
 } from '../../tools/utils'
 import { formatAddress } from '../../tools/format'
-import { t, TRANSLATION } from '../../localization'
+import { t, tLangVls, TRANSLATION } from '../../localization'
 import { getOrderStatus, consideringDriversCount } from './status'
 
 interface IProps {
@@ -16,6 +16,7 @@ interface IProps {
   onToggleExpand: (order: IOrder) => void
   onOpenDetails: (order: IOrder) => void
   onCancel: (order: IOrder) => void
+  onPickupTipPlus: (order: IOrder) => void
 }
 
 function ActiveOrderCardImpl({
@@ -24,6 +25,7 @@ function ActiveOrderCardImpl({
   onToggleExpand,
   onOpenDetails,
   onCancel,
+  onPickupTipPlus,
 }: IProps) {
   const status = getOrderStatus(order)
   const candidates = consideringDriversCount(order)
@@ -110,6 +112,13 @@ function ActiveOrderCardImpl({
     d => d.c_state !== EBookingDriverState.Canceled &&
          d.c_state >= EBookingDriverState.Performer,
   )
+
+  const handlePickupTipPlus = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onPickupTipPlus(order)
+  }, [order, onPickupTipPlus])
+
+  const pickupTipCurrent = order.b_options?.pickup_tip ?? 0
 
   return (
     <article
@@ -199,6 +208,23 @@ function ActiveOrderCardImpl({
             </div>
           )}
 
+          <div className="active-order-card__pickup-tip">
+            <span className="active-order-card__pickup-tip-label">
+              {tLangVls(TRANSLATION.PICKUP_TIP_ACTIVE_LABEL)}
+            </span>
+            <span className="active-order-card__pickup-tip-value">
+              {formatCurrency(pickupTipCurrent)}
+            </span>
+            <button
+              type="button"
+              className="active-order-card__pickup-tip-plus"
+              aria-label={tLangVls(TRANSLATION.PICKUP_TIP_ACTIVE_LABEL)}
+              onClick={handlePickupTipPlus}
+            >
+              +
+            </button>
+          </div>
+
           <div className="active-order-card__actions">
             <button
               type="button"
@@ -234,6 +260,7 @@ const ActiveOrderCard = React.memo(ActiveOrderCardImpl, (prev, next) => {
     prev.onToggleExpand !== next.onToggleExpand ||
     prev.onOpenDetails !== next.onOpenDetails ||
     prev.onCancel !== next.onCancel ||
+    prev.onPickupTipPlus !== next.onPickupTipPlus ||
     prev.isExpanded !== next.isExpanded
   )
     return false
@@ -245,6 +272,7 @@ const ActiveOrderCard = React.memo(ActiveOrderCardImpl, (prev, next) => {
   if (a.b_passengers_count !== b.b_passengers_count) return false
   if (a.b_voting !== b.b_voting) return false
   if (a.b_options?.customer_price !== b.b_options?.customer_price) return false
+  if (a.b_options?.pickup_tip !== b.b_options?.pickup_tip) return false
   if (a.b_car_class !== b.b_car_class) return false
   if (a.b_start_address !== b.b_start_address) return false
   if (a.b_destination_address !== b.b_destination_address) return false

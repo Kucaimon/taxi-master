@@ -346,6 +346,54 @@ $status-problem: #EB5757;    // red: error / cancellation needed
     font-weight: 600;
   }
 
+  &__pickup-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  &__pickup-tip-label {
+    color: rgba(0, 0, 0, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 12px;
+    flex: 1 1 auto;
+  }
+
+  &__pickup-tip-value {
+    color: #1F2937;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__pickup-tip-plus {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    background: $status-performer;
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+
+    &:hover {
+      background: darken(#2F80ED, 6%);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #2F80ED;
+      outline-offset: 2px;
+    }
+  }
+
   &__actions {
     display: flex;
     justify-content: flex-end;

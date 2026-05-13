@@ -2,10 +2,14 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { connect, ConnectedProps } from 'react-redux'
 import cn from 'classnames'
 import { IOrder } from '../../types/types'
+import { EStatuses } from '../../types/types'
 import { IRootState } from '../../state'
-import { ordersSelectors } from '../../state/orders'
+import { ordersSelectors, ordersActionCreators } from '../../state/orders'
 import { clientOrderActionCreators } from '../../state/clientOrder'
 import { modalsActionCreators } from '../../state/modals'
+import { formatCurrency } from '../../tools/utils'
+import { t, tLangVls, TRANSLATION } from '../../localization'
+import { openConfirmationModal } from '../modals/confirmationModalRuntime'
 import ActiveOrderCard from './Card'
 import './styles.scss'
 
@@ -16,6 +20,8 @@ const mapStateToProps = (state: IRootState) => ({
 const mapDispatchToProps = {
   setSelectedOrder: clientOrderActionCreators.setSelectedOrder,
   setCancelModal: modalsActionCreators.setCancelModal,
+  raisePickupTip: ordersActionCreators.raisePickupTip,
+  setMessageModal: modalsActionCreators.setMessageModal,
 }
 
 const connector = connect(mapStateToProps, mapDispatchToProps)
@@ -31,6 +37,8 @@ function ActiveOrdersOverlay({
   onOrderSelect,
   setSelectedOrder,
   setCancelModal,
+  raisePickupTip,
+  setMessageModal,
 }: IProps) {
   // Single-card-at-a-time expansion: tracking it locally (not in
   // Redux) keeps the open-state purely visual and avoids polluting
@@ -68,6 +76,43 @@ function ActiveOrdersOverlay({
     setCancelModal(true)
   }, [setSelectedOrder, setCancelModal])
 
+  const handlePickupTipPlus = useCallback(async(order: IOrder) => {
+    const current = order.b_options?.pickup_tip ?? 0
+    const next = current + 1
+    const body = [
+      tLangVls(TRANSLATION.PICKUP_TIP_CONFIRM_BODY),
+      '',
+      `${tLangVls(TRANSLATION.PICKUP_TIP_CONFIRM_NEW_TOTAL)}: ${
+        formatCurrency(next)
+      }`,
+    ].join('\n')
+    try {
+      const ok = await openConfirmationModal({
+        title: tLangVls(TRANSLATION.PICKUP_TIP_CONFIRM_TITLE),
+        message: body,
+        confirmLabel: tLangVls(TRANSLATION.CONFIRM),
+        cancelLabel: tLangVls(TRANSLATION.CANCEL),
+        tone: 'info',
+      })
+      if (!ok) return
+      try {
+        await raisePickupTip(order.b_id, next)
+      } catch (error) {
+        const message =
+          error instanceof Error ?
+            error.message :
+            t(TRANSLATION.ERROR)
+        setMessageModal({
+          isOpen: true,
+          message,
+          status: EStatuses.Fail,
+        })
+      }
+    } catch {
+      // Concurrent confirmation modal.
+    }
+  }, [raisePickupTip, setMessageModal])
+
   if (!activeOrders?.length) return null
 
   return (
@@ -85,6 +130,7 @@ function ActiveOrdersOverlay({
             onToggleExpand={handleToggleExpand}
             onOpenDetails={handleOpenDetails}
             onCancel={handleCancel}
+            onPickupTipPlus={handlePickupTipPlus}
           />
         ))}
       </div>
