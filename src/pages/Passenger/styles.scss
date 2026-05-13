@@ -74,7 +74,9 @@ $formPlaceholderHeight: 208px - 16px;
 
     &__form-container {
       min-height: min(560px, 100%);
-      padding-top: 0;
+      // Was 0 — boundary chips sat flush against the map (client screenshot).
+      padding-top: 12px;
+      row-gap: 12px;
     }
 
     &__draggable {
