@@ -45,6 +45,9 @@ $formPlaceholderHeight: 208px - 16px;
     min-height: min(520px, 100%);
     max-height: 100%;
     padding-top: 8px;
+    // Fill flex slack below `&__draggable` (min-height vs max-height) so map
+    // does not show through as a hairline.
+    background-color: #ffffff;
   }
 
   &__draggable {
