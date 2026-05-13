@@ -41,6 +41,22 @@
     color: #FF1111;
   }
 
+  &__order-footer {
+    display: none;
+    flex-direction: column;
+    row-gap: 8px;
+  }
+
+  &--expanded &__order-footer {
+    display: flex;
+  }
+
+  &__order-peek {
+    display: flex;
+    flex-direction: column;
+    row-gap: 8px;
+  }
+
   &__location-wrapper {
     display: flex;
     flex-direction: column;
@@ -216,5 +232,20 @@
       justify-content: flex-start;
       height: 36px;
     }
+  }
+}
+
+// Mid-drag between collapsed and expanded: `useSwipe` toggles these classes on
+// `.passenger__draggable` so we never stack peek chips/buttons over the body.
+.passenger__draggable.passenger__draggable--sheet-touching.passenger__draggable--sheet-between {
+  .passenger-voting-form__order-peek,
+  .passenger-voting-form__short-info-peek {
+    display: none !important;
+  }
+
+  .passenger-voting-form__order-footer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 8px;
   }
 }
