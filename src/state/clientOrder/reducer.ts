@@ -46,7 +46,6 @@ const record = Record<IClientOrderState>({
   phone: getItem('state.clientOrder.phone', defaultRecord.phone),
   customerPrice:
     getItem('state.clientOrder.customerPrice', defaultRecord.customerPrice),
-  pickupTip: getItem('state.clientOrder.pickupTip', defaultRecord.pickupTip),
 })
 
 export default function reducer(
@@ -198,9 +197,18 @@ export default function reducer(
     case ActionTypes.SET_CUSTOMER_PRICE:
       return state
         .set('customerPrice', payload)
-    case ActionTypes.SET_PICKUP_TIP:
-      return state
-        .set('pickupTip', payload)
+    case ActionTypes.SET_PICKUP_TIP: {
+      const prev = state.pickupTip ?? 0
+      if (payload === null) {
+        if (prev === 0)
+          return state.set('pickupTip', null)
+        return state
+      }
+      if (typeof payload !== 'number' || Number.isNaN(payload))
+        return state
+      const next = Math.max(prev, payload)
+      return state.set('pickupTip', next)
+    }
     case ActionTypes.SET_SELECTED_ORDER:
       return state
         .set('selectedOrder', payload)

@@ -33,7 +33,6 @@ export const saga = function* () {
     takeEvery(ActionTypes.SET_TIME, setTimeSaga),
     takeEvery(ActionTypes.SET_PHONE, setPhoneSaga),
     takeEvery(ActionTypes.SET_CUSTOMER_PRICE, setCustomerPriceSaga),
-    takeEvery(ActionTypes.SET_PICKUP_TIP, setPickupTipSaga),
     takeEvery(ActionTypes.RESET, resetSaga),
   ])
 }
@@ -96,11 +95,6 @@ function* setCustomerPriceSaga() {
   setItem('state.clientOrder.customerPrice', value)
 }
 
-function* setPickupTipSaga() {
-  const value = yield* select(keySelector('pickupTip'))
-  setItem('state.clientOrder.pickupTip', value)
-}
-
 function resetSaga() {
   const keys = [
     'carClass',
@@ -110,10 +104,10 @@ function resetSaga() {
     'comments',
     'time',
     'customerPrice',
-    'pickupTip',
   ]
   for (const key of keys)
     removeItem(`state.clientOrder.${key}`)
+  removeItem('state.clientOrder.pickupTip')
 }
 
 const keySelector = <K extends keyof IClientOrderState>(key: K) =>
