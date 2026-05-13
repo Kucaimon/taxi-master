@@ -1,4 +1,8 @@
-import { ActionTypes, EMapModalTypes } from './constants'
+import {
+  ActionTypes,
+  EMapModalTypes,
+  defaultConfirmationModal,
+} from './constants'
 import { Record } from 'immutable'
 import { TAction } from '../../types'
 import { IModalsState } from './constants'
@@ -75,6 +79,7 @@ export const record = Record<IModalsState>({
   activeChat: null,
   deleteFilesModal: { ...defaultDeleteFilesModal },
   orderCardModal: defaultOrderCardModal,
+  confirmationModal: { ...defaultConfirmationModal },
 })
 
 export default function reducer(state = new record(), action: TAction) {
@@ -159,6 +164,9 @@ export default function reducer(state = new record(), action: TAction) {
     case ActionTypes.SET_ORDER_CARD_MODAL:
       return state
         .set('orderCardModal', payload)
+    case ActionTypes.SET_CONFIRMATION_MODAL:
+      return state
+        .set('confirmationModal', payload)
     case ActionTypes.CLOSE_ALL_MODALS:
       return state
         .set('isCancelModalOpen', false)
@@ -181,6 +189,7 @@ export default function reducer(state = new record(), action: TAction) {
         .set('profileModal', { ...defaultProfileModal })
         .set('deleteFilesModal', { ...defaultDeleteFilesModal })
         .set('orderCardModal', defaultOrderCardModal)
+        .set('confirmationModal', { ...defaultConfirmationModal })
     case ActionTypes.SET_SHOW_SWITCHERS_MENU:
       return state.set('isShowSwitchersMenu', payload)
     default:

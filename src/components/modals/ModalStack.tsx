@@ -24,6 +24,7 @@ import CandidatesModal from './CandidatesModal'
 import MessageModal from './MessageModal'
 import WACodeModal from './LoginModal/WACodeModal'
 import RefCodeModal from './LoginModal/RefCodeModal'
+import ConfirmationModal from './ConfirmationModal'
 import CardModal from './CardModal'
 
 const COMPONENTS = [
@@ -49,6 +50,7 @@ const COMPONENTS = [
   [WACodeModal, modalsSelectors.isWACodeModalOpen],
   [RefCodeModal, modalsSelectors.isRefCodeModalOpen],
   [CardModal, modalsSelectors.isOrderCardModalOpen],
+  [ConfirmationModal, modalsSelectors.isConfirmationModalOpen],
 ] as const
 
 const modalsSelector = createSelector(

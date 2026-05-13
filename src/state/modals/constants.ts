@@ -37,12 +37,33 @@ export const ActionTypes = {
   SET_DELETE_FILES_MODAL: `${prefix}/SET_DELETE_FILES_MODAL`,
   SET_SHOW_SWITCHERS_MENU: `${prefix}/SET_SHOW_SWITCHERS_MENU`,
   SET_ORDER_CARD_MODAL: `${prefix}/SET_ORDER_CARD_MODAL`,
+  SET_CONFIRMATION_MODAL: `${prefix}/SET_CONFIRMATION_MODAL`,
 } as const
 
 export enum EMapModalTypes {
   Client,
   TakePassenger,
   OrderDetails
+}
+
+export type TConfirmationModalTone = 'info' | 'warning'
+
+export interface IConfirmationModalState {
+  isOpen: boolean
+  title: string
+  message: string
+  confirmLabel: string
+  cancelLabel: string
+  tone: TConfirmationModalTone
+}
+
+export const defaultConfirmationModal: IConfirmationModalState = {
+  isOpen: false,
+  title: '',
+  message: '',
+  confirmLabel: '',
+  cancelLabel: '',
+  tone: 'info',
 }
 
 export interface IModalsState {
@@ -110,4 +131,5 @@ export interface IModalsState {
     isOpen: false
     orderId?: undefined
   }
+  confirmationModal: IConfirmationModalState
 }

@@ -8,11 +8,19 @@ interface IProps {
   isOpen: boolean,
   onClick?: () => any,
   children: React.ReactNode
+  /** Merged onto `overlay__wrapper` (e.g. z-index for stack priority). */
+  wrapperClassName?: string
 }
 
-const Overlay: React.FC<IProps> = ({ isOpen, onClick, children }) => (
+const Overlay: React.FC<IProps> = ({
+  isOpen, onClick, children, wrapperClassName,
+}) => (
   <div
-    className={cn('overlay__wrapper', { 'overlay__wrapper--active': isOpen })}
+    className={cn(
+      'overlay__wrapper',
+      wrapperClassName,
+      { 'overlay__wrapper--active': isOpen },
+    )}
   >
     <Helmet>
       <style>

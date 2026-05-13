@@ -85,3 +85,7 @@ export const setIsShowSwitchersMenu = (payload: IModalsState['isShowSwitchersMen
 export const setOrderCardModal = (
   payload: IModalsState['orderCardModal'],
 ): TAction => ({ type: ActionTypes.SET_ORDER_CARD_MODAL, payload })
+
+export const setConfirmationModal = (
+  payload: IModalsState['confirmationModal'],
+): TAction => ({ type: ActionTypes.SET_CONFIRMATION_MODAL, payload })

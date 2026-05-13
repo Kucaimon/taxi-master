@@ -45,3 +45,8 @@ export const orderCardModal = (state: IRootState) =>
   moduleSelector(state).orderCardModal
 export const isOrderCardModalOpen = (state: IRootState) =>
   orderCardModal(state).isOpen
+
+export const confirmationModal = (state: IRootState) =>
+  moduleSelector(state).confirmationModal
+export const isConfirmationModalOpen = (state: IRootState) =>
+  confirmationModal(state).isOpen
