@@ -4,50 +4,59 @@
   gap: 8px;
   width: 100%;
 
-  // When customer-price feature is disabled (`ENABLE_CUSTOMER_PRICE=false`)
-  // the estimate alone fills the row.
-  &--single &__container {
-    flex: 1 1 auto;
+  %price-input__hidden-segment {
+    .price-input__segment input {
+      width: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .price-input__segment {
+      width: 0;
+      overflow: hidden;
+    }
   }
 
-  // Two segments side-by-side, equal width. Used when the user has
-  // entered a customer price — both numbers stay visible at the same
-  // time so the user can compare their offer to the estimate.
-  &--both &__container {
-    flex: 1 1 0;
-  }
-
-  // Default: customer price is empty. The estimate takes most of the
-  // row and the (empty) customer-price field collapses to an icon
-  // button, matching the original UI that the customer asked us to
-  // keep when their value isn't set.
-  &--estimate-focused &__container {
+  %price-input__icon-cell {
     flex: 0 0 40px;
     justify-content: flex-end;
     column-gap: 0;
     padding: 0 12px;
     cursor: pointer;
     transition: 0.25s ease-in-out;
-    transition-property: flex-grow, padding;
+    transition-property: flex-grow, flex-basis, padding;
   }
-  &--estimate-focused &__container--estimate {
+
+  &--l-single &__container {
+    flex: 1 1 auto;
+  }
+
+  &--l-only-customer &__container--estimate,
+  &--l-only-customer &__container--customer {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &--l-icons &__container--estimate {
     flex: 1 1 auto;
     justify-content: flex-start;
     padding: 0 12px;
     cursor: default;
   }
-  &--estimate-focused &__container:not(.price-input__container--estimate)
-    &__segment input {
-    // Hide the input itself when collapsed — the icon serves as
-    // the visual representation of the field.
-    width: 0;
-    padding: 0;
-    border: 0;
+
+  &--l-icons &__container--customer {
+    @extend %price-input__icon-cell;
+    @extend %price-input__hidden-segment;
   }
-  &--estimate-focused &__container:not(.price-input__container--estimate)
-    &__segment {
-    width: 0;
-    overflow: hidden;
+
+  &--l-draft-customer &__container--estimate {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &--l-draft-customer &__container--customer {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   &__container {
@@ -58,7 +67,7 @@
     padding: 0 12px;
     border-radius: 16px;
     background-color: #E7E7E7;
-    min-width: 0; // allow children to ellipsis inside flex
+    min-width: 0;
 
     &--disabled {
       background-color: #EFEFEF;
