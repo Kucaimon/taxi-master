@@ -1,7 +1,6 @@
 @import "../../tools/mixins";
 
 $formPlaceholderHeight: 208px - 16px;
-$formContainerTop: -40px - 8px - 16px;
 
 .passenger {
   // Compatibility hook for the new ActiveOrdersOverlay. Positioning
@@ -27,7 +26,9 @@ $formContainerTop: -40px - 8px - 16px;
 
   &__form-container {
     position: absolute;
-    top: $formContainerTop;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -37,7 +38,6 @@ $formContainerTop: -40px - 8px - 16px;
     min-height: min(520px, 100%);
     max-height: 100%;
     padding-top: 8px;
-    transition: top 0.5s ease-in-out;
   }
 
   &__draggable {
@@ -63,7 +63,6 @@ $formContainerTop: -40px - 8px - 16px;
     }
 
     &__form-container {
-      top: -12px;
       min-height: min(560px, 100%);
       padding-top: 0;
     }
