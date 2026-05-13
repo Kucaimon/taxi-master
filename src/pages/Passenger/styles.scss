@@ -49,15 +49,17 @@
     z-index: 2;
     display: flex;
     flex-direction: column;
-    row-gap: 8px;
+    row-gap: 10px;
     overflow: hidden;
     width: 100%;
     min-height: 0;
     max-height: 100%;
-    padding-top: 16px;
-    // Fill flex slack below `&__draggable` (min-height vs max-height) so map
-    // does not show through as a hairline.
+    padding-top: 24px;
     background-color: #ffffff;
+    // Rounded top corners + soft shadow so the panel reads as a
+    // separate card under the map instead of a flat band glued to it.
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.06);
 
     .boundary-buttons {
       margin-top: 4px;
@@ -71,21 +73,20 @@
     overflow: auto;
     row-gap: 16px;
     padding: 16px;
-    border-radius: 16px 16px 0 0;
     background-color: #ffffff;
   }
 
   @media (max-width: 768px) {
-    gap: 14px;
+    gap: 12px;
 
     &__form-map-container {
       margin-top: 0;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     &__form-container {
-      padding-top: 20px;
-      row-gap: 14px;
+      padding-top: 28px;
+      row-gap: 12px;
 
       .boundary-buttons {
         margin-top: 6px;
