@@ -1,7 +1,5 @@
 @import "../../tools/mixins";
 
-$formPlaceholderHeight: 208px - 16px;
-
 .passenger {
   // Fill `layout__content` reliably on iOS flex layout (default
   // `min-height: auto` can prevent the percentage-height chain from
@@ -9,6 +7,11 @@ $formPlaceholderHeight: 208px - 16px;
   // absolute bottom form anchor).
   flex: 1 1 auto;
   min-height: 0;
+  // Map : bottom slot = 75 : 25 (only in-flow children are map + placeholder;
+  // ActiveOrdersOverlay is `position:absolute` and skipped by flex sizing).
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
   // Compatibility hook for the new ActiveOrdersOverlay. Positioning
   // and safe-area handling now live inside the component itself; this
@@ -20,15 +23,24 @@ $formPlaceholderHeight: 208px - 16px;
 
   &__form-map-container {
     margin-top: -16px;
-    flex-grow: 1;
-    flex-basis: 100%;
+    flex: 3 1 0%;
+    min-height: 0;
+    max-height: 100%;
+    width: 100%;
     z-index: 0;
+    // Default `.map-container` uses viewport height and ignores the flex row;
+    // pin the passenger map to this 75% row instead.
+    height: 100%;
+    box-sizing: border-box;
+    margin-bottom: 4px;
   }
 
   &__form-placeholder {
-    flex: none;
+    flex: 1 1 0%;
+    min-height: 0;
     width: 100%;
-    height: $formPlaceholderHeight;
+    // In-flow spacer for the lower 25% band; the sheet is `absolute` on top.
+    pointer-events: none;
   }
 
   &__form-container {
@@ -42,12 +54,16 @@ $formPlaceholderHeight: 208px - 16px;
     row-gap: 8px;
     overflow: hidden;
     width: 100%;
-    min-height: min(520px, 100%);
+    min-height: 0;
     max-height: 100%;
-    padding-top: 8px;
+    padding-top: 16px;
     // Fill flex slack below `&__draggable` (min-height vs max-height) so map
     // does not show through as a hairline.
     background-color: #ffffff;
+
+    .boundary-buttons {
+      margin-top: 4px;
+    }
   }
 
   &__draggable {
@@ -62,21 +78,20 @@ $formPlaceholderHeight: 208px - 16px;
   }
 
   @media (max-width: 768px) {
+    gap: 14px;
+
     &__form-map-container {
       margin-top: 0;
-    }
-
-    // Show more of the form by default on phones so users
-    // don't feel like the map takes the whole screen.
-    &__form-placeholder {
-      height: 240px;
+      margin-bottom: 8px;
     }
 
     &__form-container {
-      min-height: min(560px, 100%);
-      // Was 0 — boundary chips sat flush against the map (client screenshot).
-      padding-top: 12px;
-      row-gap: 12px;
+      padding-top: 20px;
+      row-gap: 14px;
+
+      .boundary-buttons {
+        margin-top: 6px;
+      }
     }
 
     &__draggable {
