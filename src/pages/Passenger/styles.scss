@@ -41,11 +41,11 @@
   &__form-placeholder {
     flex: none;
     width: 100%;
-    // Approximates the collapsed bottom-sheet height so the map slot
-    // ends exactly where the panel begins. Tuned per breakpoint below.
-    height: 36dvh;
-    min-height: 260px;
-    max-height: 420px;
+    // Fixed pixel height so the bottom sheet looks the same on every
+    // device (iPhone SE, 14 Pro Max, foldables, Android etc.). The
+    // map slot adjusts to whatever is left above; the sheet does not.
+    // Tuned to the actual collapsed bottom-sheet content height.
+    height: 320px;
     pointer-events: none;
   }
 
@@ -91,11 +91,9 @@
 
     &__form-placeholder {
       // Mobile sheet is taller (full vote/order buttons + From/To +
-      // peek info), so the in-flow slot must be larger to keep the map
-      // pin centered above it.
-      height: 42dvh;
-      min-height: 300px;
-      max-height: 440px;
+      // peek info). Fixed in pixels so every phone gets the same
+      // layout regardless of viewport height (`dvh` would vary).
+      height: 340px;
     }
 
     &__form-container {
