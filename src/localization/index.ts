@@ -90,18 +90,42 @@ function t(id: string, options: IOptions = {}) {
   }
 }
 
-/** Like `t` for default `lang_vls` keys, with a static fallback when the key is missing server-side. */
+/**
+ * Like `t` for default `lang_vls` keys, with a static fallback when the
+ * key is missing server-side.
+ *
+ * Priority for keys present in `LANG_VLS_FALLBACKS`:
+ *
+ *   1. Static fallback for the current locale (ru/en).
+ *   2. Server data via `t()`.
+ *   3. Static fallback in English as a last resort.
+ *
+ * For these keys we ship a developer-canonical UI copy in code, so we
+ * intentionally win over the server. The previous "server first" order
+ * leaked English (`Pickup`) into Russian sessions whenever the server
+ * carried the key in English only — `t()` then resolved through its
+ * cross-language cascade and our Russian fallback never ran (client
+ * screenshot, May 14: the pickup-tip segment rendered as "Pickup"
+ * instead of «На подачу»).
+ *
+ * For keys NOT present in the fallback table the behaviour is unchanged:
+ * `t()` is consulted and `'Error'` propagates on miss.
+ */
 function tLangVls(id: string): string {
-  const primary = t(id)
-  if (primary !== 'Error')
-    return primary
   const key = id.split('.').pop() || id
   const fb = LANG_VLS_FALLBACKS[key]
-  if (!fb)
-    return 'Error'
-  const language = configSelectors.language(store.getState())
-  const iso = (language?.iso || '').toLowerCase()
-  return iso.startsWith('ru') ? fb.ru : fb.en
+  if (fb) {
+    const language = configSelectors.language(store.getState())
+    const iso = (language?.iso || '').toLowerCase()
+    if (iso.startsWith('ru')) return fb.ru
+    if (iso.startsWith('en')) return fb.en
+    const fromServer = t(id)
+    if (fromServer !== 'Error') return fromServer
+    return fb.en
+  }
+  const primary = t(id)
+  if (primary !== 'Error') return primary
+  return 'Error'
 }
 
 // TODO get back
