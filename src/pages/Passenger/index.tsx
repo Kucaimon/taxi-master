@@ -222,7 +222,7 @@ function Passenger({
 
   return (
     <Layout>
-      <PageSection className="passenger" scrollable={false}>
+      <PageSection className="passenger" scrollable={true}>
 
         {useMemo(() =>
           <ActiveOrdersOverlay
