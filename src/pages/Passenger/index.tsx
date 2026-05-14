@@ -244,13 +244,18 @@ function Passenger({
           ref={formContainerRef}
           className="passenger__form-container"
         >
+          {/* Card-level chrome: the grab handle now lives on the
+              form-container, above the chip row, so the affordance sits
+              at the very top of the visible sheet (iOS/Android default).
+              Previously it was nested inside `.passenger__draggable`
+              and was hidden under the chips when the card was scrolled
+              partially into view. */}
+          <div className="passenger__swipe-line" aria-hidden="true"></div>
           {useMemo(() => <BoundaryButtons />, [])}
           <div
             className="passenger__draggable"
             ref={draggableRef}
           >
-            <div className="passenger__swipe-line"></div>
-
             {useMemo(() =>
               <VotingForm
                 isExpanded={isExpanded}
