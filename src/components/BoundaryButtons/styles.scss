@@ -23,8 +23,14 @@ $red: #FF2400;
     background-color: #E7E7E7;
     white-space: nowrap;
     cursor: pointer;
-    transition: 0.5s ease-in-out;
-    transition-property: max-width, background-color;
+    // Brought in line with the project-wide UX transition tempo
+    // (`--ux-transition` in App.scss). The previous 500ms felt
+    // mismatched against the 220ms sheet/header transitions and
+    // contributed to the "everything jitters at different speeds"
+    // feeling the client reported.
+    transition:
+      max-width var(--ux-transition),
+      background-color var(--ux-transition);
 
     &--active {
       background-color: $red;

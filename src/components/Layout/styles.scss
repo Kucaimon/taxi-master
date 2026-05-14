@@ -23,10 +23,10 @@
     max-height: 240px;
     will-change: max-height, opacity, transform;
     transition:
-      max-height 220ms ease,
-      padding 220ms ease,
-      opacity 220ms ease,
-      transform 220ms ease;
+      var(--ux-transition-max-height),
+      var(--ux-transition-padding),
+      var(--ux-transition-opacity),
+      var(--ux-transition-transform);
   }
 
   &__content {

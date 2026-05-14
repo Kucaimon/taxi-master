@@ -4,6 +4,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@200..1000&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
+// Global UX transition tokens. Centralizing the timing makes "polish"
+// changes a single grep — and ensures the passenger sheet, header,
+// chip row, and form-container all animate on the same beat so the
+// page does not feel "stuttered" the way the client described on
+// May 14 ("прыгает экран во всех режимах").
+:root {
+  --ux-duration: 220ms;
+  --ux-easing: ease;
+  --ux-transition: var(--ux-duration) var(--ux-easing);
+  --ux-transition-max-height: max-height var(--ux-duration) var(--ux-easing);
+  --ux-transition-padding: padding var(--ux-duration) var(--ux-easing);
+  --ux-transition-transform: transform var(--ux-duration) var(--ux-easing);
+  --ux-transition-opacity: opacity var(--ux-duration) var(--ux-easing);
+}
+
 body {
   background: #fffbf4;
   margin: 0;

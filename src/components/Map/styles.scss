@@ -125,8 +125,9 @@
     // Animate the position offsets so the controls do not snap when the
     // map enters/exits fullscreen (where they pick up the safe-area
     // inset). `position` itself is non-animatable; the values that move
-    // are `top`/`right`.
-    transition: top 220ms ease, right 220ms ease;
+    // are `top`/`right`. The duration/easing is the project-wide UX
+    // transition token (see `App.scss :root`).
+    transition: top var(--ux-transition), right var(--ux-transition);
     will-change: top, right;
 
     button {
@@ -203,6 +204,11 @@
   // Pin the bottom form above the fullscreen map. Do not cap with a
   // small vh fraction or `min-height: 0` — that squashed the sheet and
   // starved swipe math; match the passenger mobile sheet limits instead.
+  //
+  // We intentionally do NOT force `padding-top: 0` here anymore — the
+  // form-container now carries the card chrome (rounded top + swipe
+  // handle) and needs the same default top padding it has in normal
+  // mode; clearing it would shove the chip row into the grab handle.
   .passenger__form-container {
     position: fixed !important;
     left: 0 !important;
@@ -213,7 +219,6 @@
     width: 100% !important;
     max-height: 100vh !important;
     max-height: 100dvh !important;
-    padding-top: 0 !important;
   }
 
   .passenger__draggable {
