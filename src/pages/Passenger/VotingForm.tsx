@@ -321,6 +321,160 @@ const VotingForm = function VotingForm({
       {submitError}
     </span>
 
+  // -----------------------------------------------------------------
+  // Memoised blocks that live BELOW the always-visible peek group.
+  //
+  // These hooks must be called unconditionally on every render
+  // (Rules of Hooks). The conditional rendering happens at the JSX
+  // seam below, by inserting (or not inserting) the memoised result
+  // into the tree based on `isExpanded`. That keeps the collapsed
+  // sheet around ~25 % of the viewport while still rendering the
+  // full form once the user drags it up.
+  // -----------------------------------------------------------------
+
+  const expandedExtras = useMemo(() => {
+    const idLabels = comments.ids.map(id =>
+      t(TRANSLATION.BOOKING_COMMENTS[id]),
+    )
+    const planeParts: string[] = []
+    if (comments.flightNumber)
+      planeParts.push(`№ ${t(TRANSLATION.FLIGHT)} ${comments.flightNumber}`)
+    if (comments.placard)
+      planeParts.push(comments.placard)
+    const commentsSummary = [
+      ...idLabels,
+      ...planeParts,
+      comments.custom?.trim() || '',
+    ].filter(Boolean).join(', ')
+
+    return (
+      <>
+        <div className="passenger-voting-form__seats-and-time">
+          <div className="passenger-voting-form__seats">
+            <span className="passenger-voting-form__seats-title">
+              {t(TRANSLATION.SEATS)}
+            </span>
+            <div ref={seatSliderRef}>
+              <SeatSlider />
+            </div>
+          </div>
+
+          <div className="passenger-voting-form__time">
+            <div className="passenger-voting-form__time-wrapper">
+              <span className="passenger-voting-form__time-title">
+                {t(TRANSLATION.START_TIME)}
+              </span>
+              <span className="passenger-voting-form__time-value">
+                {time === 'now' ?
+                  t(TRANSLATION.NOW) :
+                  time.format('D MMM, H:mm')
+                }
+              </span>
+            </div>
+            <button
+              className="passenger-voting-form__time-btn"
+              onClick={() => setPickTimeModal(true)}
+            >
+              <Icon src="alarm" className="passenger-voting-form__time-icon" />
+            </button>
+          </div>
+        </div>
+
+        <div className="passenger-voting-form__car-class">
+          <div className="passenger-voting-form__car-class-header">
+            <span className="passenger-voting-form__car-class-title">
+              {t(TRANSLATION.AUTO_CLASS)}
+            </span>
+            <div className="passenger-voting-form__car-nearby-info">
+              <Icon
+                src="carNearby"
+                className="passenger-voting-form__car-nearby-icon"
+              />
+              <span className="passenger-voting-form__car-nearby-info-text">{7} автомобилей рядом</span>
+            </div>
+            <div className="passenger-voting-form__car-nearby-info">
+              <Icon
+                src="timeWait"
+                className="passenger-voting-form__waiting-time-icon"
+              />
+              <span className="passenger-voting-form__car-nearby-info-text">~{5} минут</span>
+            </div>
+          </div>
+          <div ref={carSliderRef}>
+            <CarClassSlider />
+          </div>
+        </div>
+
+        <div className="passenger-voting-form__comments">
+          <div className="passenger-voting-form__comments-wrapper">
+            <span className="passenger-voting-form__comments-title">
+              {t(TRANSLATION.COMMENT)}
+            </span>
+            <span
+              className="passenger-voting-form__comments-value"
+              title={commentsSummary || undefined}
+            >
+              {commentsSummary || '-'}
+            </span>
+          </div>
+          <button
+            className="passenger-voting-form__comments-btn"
+            onClick={() => setCommentsModal(true)}
+          >
+            <img src={images.seatSliderArrowRight} width={16} />
+          </button>
+        </div>
+      </>
+    )
+  }, [comments, time, setPickTimeModal, setCommentsModal])
+
+  // Phone input stays visible when collapsed only for users who are
+  // not logged in — otherwise the submit handler bounces them with a
+  // "phone required" error from a field they cannot see.
+  const phoneBlock = useMemo(() => {
+    if (!isExpanded && user) return null
+    const phoneButtons: { src: string; onClick: () => void; alt?: string }[] = []
+    if (user?.u_phone)
+      phoneButtons.push({
+        src: images.checkMarkRed,
+        onClick: () => setPhone(+user!.u_phone!),
+        alt: 'Use registration phone',
+      })
+    phoneButtons.push({
+      src: isPhoneRemembered ? images.starFull : images.starEmpty,
+      onClick: togglePhoneRemember,
+      alt: isPhoneRemembered ?
+        'Forget remembered phone' :
+        'Remember this phone for next orders',
+    })
+    return (
+      <Input
+        fieldWrapperClassName="passenger-voting-form__input"
+        inputProps={{
+          value: phone ?? '',
+        }}
+        inputType={EInputTypes.MaskedPhone}
+        style={EInputStyles.RedDesign}
+        buttons={phoneButtons}
+        error={phoneError ?? undefined}
+        onChange={(e) => {
+          setPhone(e as number)
+        }}
+      />
+    )
+  }, [
+    isExpanded, phone, setPhone, user,
+    phoneError, isPhoneRemembered, togglePhoneRemember,
+  ])
+
+  const priceBlock = useMemo(() =>
+    SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE &&
+      <PriceInput
+        className="passenger-voting-form__input"
+        onPickupTipBlur={handlePickupTipBlur}
+      />
+  , [handlePickupTipBlur])
+
   return (
     <form
       className={
@@ -374,148 +528,15 @@ const VotingForm = function VotingForm({
           </div>}
       </div>
 
-      <div className="passenger-voting-form__seats-and-time">
-        {useMemo(() =>
-          <div className="passenger-voting-form__seats">
-            <span className="passenger-voting-form__seats-title">
-              {t(TRANSLATION.SEATS)}
-            </span>
-            <div ref={seatSliderRef}>
-              <SeatSlider />
-            </div>
-          </div>
-        , [])}
+      {/* Heavy sections live in `expandedExtras` (computed at the top of
+          this component, unconditionally — Rules of Hooks). They render
+          here only when the sheet is expanded so collapsed view stays at
+          ~25% of the viewport. */}
+      {isExpanded && expandedExtras}
 
-        {useMemo(() =>
-          <div className="passenger-voting-form__time">
-            <div className="passenger-voting-form__time-wrapper">
-              <span className="passenger-voting-form__time-title">
-                {t(TRANSLATION.START_TIME)}
-              </span>
-              <span className="passenger-voting-form__time-value">
-                {time === 'now' ?
-                  t(TRANSLATION.NOW) :
-                  time.format('D MMM, H:mm')
-                }
-              </span>
-            </div>
-            <button
-              className="passenger-voting-form__time-btn"
-              onClick={() => setPickTimeModal(true)}
-            >
-              <Icon src="alarm" className="passenger-voting-form__time-icon" />
-            </button>
-          </div>
-        , [time, setPickTimeModal])}
-      </div>
+      {phoneBlock}
 
-      {useMemo(() =>
-        <div className="passenger-voting-form__car-class">
-          <div className="passenger-voting-form__car-class-header">
-            <span className="passenger-voting-form__car-class-title">
-              {t(TRANSLATION.AUTO_CLASS)}
-            </span>
-            <div className="passenger-voting-form__car-nearby-info">
-              <Icon
-                src="carNearby"
-                className="passenger-voting-form__car-nearby-icon"
-              />
-              <span className="passenger-voting-form__car-nearby-info-text">{7} автомобилей рядом</span>
-            </div>
-            <div className="passenger-voting-form__car-nearby-info">
-              <Icon
-                src="timeWait"
-                className="passenger-voting-form__waiting-time-icon"
-              />
-              <span className="passenger-voting-form__car-nearby-info-text">~{5} минут</span>
-            </div>
-          </div>
-          <div ref={carSliderRef}>
-            <CarClassSlider />
-          </div>
-        </div>
-      , [])}
-
-      {useMemo(() => {
-        // Render preset checkbox labels together with the free-form
-        // text fields the modal collects: previously only `ids` were
-        // shown, so a user-typed comment looked lost the moment the
-        // modal closed (see customer screenshot, "Поорртл" disappearing).
-        const idLabels = comments.ids.map(id =>
-          t(TRANSLATION.BOOKING_COMMENTS[id]),
-        )
-        const planeParts: string[] = []
-        if (comments.flightNumber)
-          planeParts.push(`№ ${t(TRANSLATION.FLIGHT)} ${comments.flightNumber}`)
-        if (comments.placard)
-          planeParts.push(comments.placard)
-        const summary = [
-          ...idLabels,
-          ...planeParts,
-          comments.custom?.trim() || '',
-        ].filter(Boolean).join(', ')
-        return (
-          <div className="passenger-voting-form__comments">
-            <div className="passenger-voting-form__comments-wrapper">
-              <span className="passenger-voting-form__comments-title">
-                {t(TRANSLATION.COMMENT)}
-              </span>
-              <span
-                className="passenger-voting-form__comments-value"
-                title={summary || undefined}
-              >
-                {summary || '-'}
-              </span>
-            </div>
-            <button
-              className="passenger-voting-form__comments-btn"
-              onClick={() => setCommentsModal(true)}
-            >
-              <img src={images.seatSliderArrowRight} width={16} />
-            </button>
-          </div>
-        )
-      }, [comments, setCommentsModal])}
-
-      {useMemo(() => {
-        const phoneButtons: { src: string; onClick: () => void; alt?: string }[] = []
-        if (user?.u_phone)
-          phoneButtons.push({
-            src: images.checkMarkRed,
-            onClick: () => setPhone(+user!.u_phone!),
-            alt: 'Use registration phone',
-          })
-        // Star toggle: persist current phone for next orders. Filled =
-        // remembered, empty = ad-hoc.
-        phoneButtons.push({
-          src: isPhoneRemembered ? images.starFull : images.starEmpty,
-          onClick: togglePhoneRemember,
-          alt: isPhoneRemembered ?
-            'Forget remembered phone' :
-            'Remember this phone for next orders',
-        })
-        return (
-          <Input
-            fieldWrapperClassName="passenger-voting-form__input"
-            inputProps={{
-              value: phone ?? '',
-            }}
-            inputType={EInputTypes.MaskedPhone}
-            style={EInputStyles.RedDesign}
-            buttons={phoneButtons}
-            error={phoneError ?? undefined}
-            onChange={(e) => {
-              setPhone(e as number)
-            }}
-          />
-        )
-      }, [phone, setPhone, user, phoneError, isPhoneRemembered, togglePhoneRemember])}
-      {useMemo(() => SITE_CONSTANTS.ENABLE_CUSTOMER_PRICE &&
-        <PriceInput
-          className="passenger-voting-form__input"
-          onPickupTipBlur={handlePickupTipBlur}
-        />
-      , [handlePickupTipBlur])}
+      {isExpanded && priceBlock}
 
       <div className="passenger-voting-form__order-footer">
         <div className="passenger-voting-form__order-button-wrapper">
