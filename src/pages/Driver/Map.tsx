@@ -6,7 +6,7 @@ import {
   MapContainer, Marker, TileLayer, Polyline,
   useMap,
 } from 'react-leaflet'
-import Fullscreen from 'react-leaflet-fullscreen-plugin'
+import MapCustomControls from '../../components/Map/MapCustomControls'
 import {
   EBookingDriverState,
   EOrderProfitRank,
@@ -354,8 +354,11 @@ function DriverOrderMapModeContent({
             />,
           )
       }
-      <Fullscreen
-        position="topleft"
+      <MapCustomControls
+        initialCoordinates={currentPosition ? {
+          latitude: (currentPosition as [number, number])[0],
+          longitude: (currentPosition as [number, number])[1],
+        } : null}
       />
       <button
         className='no-coords-orders'

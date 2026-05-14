@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import cn from 'classnames'
 import L from 'leaflet'
 import {
@@ -23,6 +23,7 @@ import { ordersSelectors } from '../../state/orders'
 import { orderSelectors } from '../../state/order'
 import * as storage from '../../tools/localStorage'
 import { logGeolocationError } from '../../tools/geoLog'
+import MapCustomControls from './MapCustomControls'
 import './styles.scss'
 
 const defaultZoom = 15
@@ -144,8 +145,6 @@ function MapContent({
     useState<number | null>(null)
   const [routeInfo, setRouteInfo] = useState<IRouteInfo | null>(null)
   const [showRouteInfo, setShowRouteInfo] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false)
 
   let from: IAddressPoint | null = null,
     to: IAddressPoint | null = null
@@ -315,43 +314,6 @@ function MapContent({
   }, [map, setCenter])
 
   useEffect(() => {
-    const onChange = () => {
-      // The fullscreen target is now the surrounding `<section>`
-      // (see `toggleFullscreen` below) so that the bottom form
-      // stays visible alongside the map. Compare against any
-      // currently-fullscreened ancestor of the map container, not
-      // the map container itself.
-      const fsEl = document.fullscreenElement as Element | null
-      const inFullscreen = !!fsEl && fsEl.contains(map.getContainer())
-      setIsFullscreen(inFullscreen || isPseudoFullscreen)
-    }
-    document.addEventListener('fullscreenchange', onChange)
-    return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [map, isPseudoFullscreen])
-
-  useEffect(() => {
-    const host = map.getContainer().parentElement as HTMLElement | null
-    if (!host) return
-    host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
-    map.invalidateSize()
-    return () => {
-      host.classList.remove('map-container--pseudo-fullscreen')
-    }
-  }, [map, isPseudoFullscreen])
-
-  // `map-fullscreen-active` must track *any* fullscreen (native or pseudo).
-  // Native fullscreen uses `.page-section` as the element, so `.layout__header`
-  // is outside the fullscreen subtree and selectors like
-  // `.page-section.passenger:fullscreen .layout__header` never match.
-  useEffect(() => {
-    document.body.classList.toggle('map-fullscreen-active', isFullscreen)
-    map.invalidateSize()
-    return () => {
-      document.body.classList.remove('map-fullscreen-active')
-    }
-  }, [map, isFullscreen])
-
-  useEffect(() => {
     setShowRouteInfo(false)
     setRouteInfo(null)
 
@@ -382,65 +344,6 @@ function MapContent({
     !!routeInfo?.time.hours && `${routeInfo?.time.hours} h`,
     !!routeInfo?.time.minutes && `${routeInfo?.time.minutes} min`,
   ].filter(part => part).join(' ')
-
-  const toggleFullscreen = useCallback(async(event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
-
-    // Target the closest <section.page-section> instead of the bare
-    // map container. Native fullscreen renders ONLY the requested
-    // element, so on Chrome Android / iOS Safari the bottom order
-    // form was being hidden when we fullscreened the map element
-    // alone (customer screenshot, May 8). The page section contains
-    // both the map and the form, so going fullscreen on it keeps
-    // everything visible while the browser still removes its URL
-    // bar and OS chrome. The global header sits outside this
-    // section and is hidden by the `map-fullscreen-active` CSS as
-    // before, which is the desired behaviour.
-    const mapEl = map.getContainer()
-    const target =
-      (mapEl.closest('.page-section') as HTMLElement | null) ?? mapEl
-    const element = target as any
-    const doc = document as any
-
-    if (isPseudoFullscreen) {
-      setIsPseudoFullscreen(false)
-      setIsFullscreen(false)
-      return
-    }
-
-    if (document.fullscreenElement) {
-      if (document.exitFullscreen) document.exitFullscreen()
-      else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen()
-      return
-    }
-
-    const fellBackToPseudo = () => {
-      if (
-        !document.fullscreenElement ||
-        !(document.fullscreenElement as Element).contains(mapEl)
-      ) {
-        setIsPseudoFullscreen(true)
-        setIsFullscreen(true)
-      }
-    }
-
-    try {
-      if (element.requestFullscreen) {
-        await element.requestFullscreen()
-        setTimeout(fellBackToPseudo, 150)
-      } else if (element.webkitRequestFullscreen) {
-        await element.webkitRequestFullscreen()
-        setTimeout(fellBackToPseudo, 150)
-      } else {
-        setIsPseudoFullscreen(true)
-        setIsFullscreen(true)
-      }
-    } catch (error) {
-      setIsPseudoFullscreen(true)
-      setIsFullscreen(true)
-    }
-  }, [map, isPseudoFullscreen])
 
   return (
     <>
@@ -540,51 +443,16 @@ function MapContent({
         alt="Центр"
         tabIndex={0}
       />
-      <div className="map-container__custom-controls">
-        <button
-          type="button"
-          onClick={toggleFullscreen}
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-        >
-          {isFullscreen ? '⤢' : '⛶'}
-        </button>
-        <button
-          type="button"
-          aria-label="Show my location"
-          onClick={(event) => {
-            event.preventDefault()
-            event.stopPropagation()
-            // Snapshot whatever fix we already have so the camera
-            // moves immediately and the user gets feedback even if
-            // the high-accuracy request takes a few seconds.
-            if (userCoordinates?.latitude && userCoordinates?.longitude) {
-              map.flyTo(
-                [userCoordinates.latitude, userCoordinates.longitude],
-                Math.max(map.getZoom(), 16),
-              )
-            }
-            navigator.geolocation.getCurrentPosition(
-              ({ coords }) => {
-                setUserCoordinates({
-                  latitude: coords.latitude,
-                  longitude: coords.longitude,
-                })
-                setUserCoordinatesAccuracy(coords.accuracy)
-                if (coords.accuracy && coords.accuracy < 1000)
-                  writeCachedPosition(coords.latitude, coords.longitude)
-                map.flyTo(
-                  [coords.latitude, coords.longitude],
-                  Math.max(map.getZoom(), 16),
-                )
-              },
-              (err) => logGeolocationError(err, 'map:myLocation'),
-              { enableHighAccuracy: true, maximumAge: 0, timeout: 10_000 },
-            )
-          }}
-        >
-          ◎
-        </button>
-      </div>
+      <MapCustomControls
+        initialCoordinates={userCoordinates && userCoordinates.latitude && userCoordinates.longitude ? {
+          latitude: userCoordinates.latitude,
+          longitude: userCoordinates.longitude,
+        } : null}
+        onLocate={({ latitude, longitude, accuracy }) => {
+          setUserCoordinates({ latitude, longitude })
+          setUserCoordinatesAccuracy(accuracy)
+        }}
+      />
       {/* {!disableButtons && <div className={cn('modal-buttons',{'z-indexed': isModal})}>
         {!!setFrom && (
           <Button
