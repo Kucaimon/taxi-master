@@ -73,7 +73,7 @@
     // the rounded card edge.
     padding: 14px 0 0;
     will-change: max-height, padding;
-    transition: max-height 220ms ease, padding 220ms ease;
+    transition: var(--ux-transition-max-height), var(--ux-transition-padding);
 
     .boundary-buttons {
       margin: 0 12px;
@@ -104,7 +104,7 @@
     max-height: 100vh;
     max-height: 100dvh;
     will-change: max-height, padding;
-    transition: max-height 220ms ease, padding 220ms ease;
+    transition: var(--ux-transition-max-height), var(--ux-transition-padding);
   }
 
   @media (max-width: 768px) {

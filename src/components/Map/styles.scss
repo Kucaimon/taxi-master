@@ -125,8 +125,9 @@
     // Animate the position offsets so the controls do not snap when the
     // map enters/exits fullscreen (where they pick up the safe-area
     // inset). `position` itself is non-animatable; the values that move
-    // are `top`/`right`.
-    transition: top 220ms ease, right 220ms ease;
+    // are `top`/`right`. The duration/easing is the project-wide UX
+    // transition token (see `App.scss :root`).
+    transition: top var(--ux-transition), right var(--ux-transition);
     will-change: top, right;
 
     button {
