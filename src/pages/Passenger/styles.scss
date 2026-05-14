@@ -76,6 +76,16 @@
     background-color: #ffffff;
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.06);
+    // Generous default so the fullscreen mixin (which caps `max-height`
+    // to leave room for the lifted map controls) has a concrete value
+    // to interpolate to/from instead of `auto` (which would snap).
+    // `swipe.ts` manipulates `transform` on the outer
+    // `.passenger__form-container`, never on the draggable, so the
+    // transition declared here is not wiped by inline styles.
+    max-height: 100vh;
+    max-height: 100dvh;
+    will-change: max-height, padding;
+    transition: max-height 220ms ease, padding 220ms ease;
   }
 
   @media (max-width: 768px) {

@@ -10,6 +10,23 @@
 
   &__header {
     z-index: 1;
+    // Allow the header to collapse out of flow smoothly when the
+    // passenger map enters fullscreen (see `@mixin map-fullscreen-rules`
+    // in `components/Map/styles.scss`). The initial `max-height` is a
+    // generous upper bound that does not constrain the header in normal
+    // mode but enables a real transition target when fullscreen forces
+    // it to `0`. We intentionally do NOT clip with `overflow: hidden`
+    // here so the burger-menu dropdown (`.menu__list`, positioned
+    // absolutely just below the header) keeps rendering — the combined
+    // `opacity: 0` + `transform: translateY(-100%)` masks any inner
+    // content that briefly overflows during the collapse.
+    max-height: 240px;
+    will-change: max-height, opacity, transform;
+    transition:
+      max-height 220ms ease,
+      padding 220ms ease,
+      opacity 220ms ease,
+      transform 220ms ease;
   }
 
   &__content {

@@ -333,22 +333,36 @@ function MapContent({
     const host = map.getContainer().parentElement as HTMLElement | null
     if (!host) return
     host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
-    map.invalidateSize()
     return () => {
       host.classList.remove('map-container--pseudo-fullscreen')
     }
   }, [map, isPseudoFullscreen])
 
-  // `map-fullscreen-active` must track *any* fullscreen (native or pseudo).
-  // Native fullscreen uses `.page-section` as the element, so `.layout__header`
-  // is outside the fullscreen subtree and selectors like
-  // `.page-section.passenger:fullscreen .layout__header` never match.
+  // `map-fullscreen-active` is applied ONLY for the pseudo path. Native
+  // fullscreen renders only the `.page-section` subtree, so the global
+  // `.layout__header` is already invisible to the user — applying the
+  // body class on top of it caused a second layout shift on the way INTO
+  // native fullscreen on iOS Safari (client report, May 14: "при
+  // переходе в полноэкранный режим экран прыгает"). Keeping the two
+  // paths separate means each device animates exactly one layout
+  // transformation.
   useEffect(() => {
-    document.body.classList.toggle('map-fullscreen-active', isFullscreen)
-    map.invalidateSize()
+    document.body.classList.toggle('map-fullscreen-active', isPseudoFullscreen)
     return () => {
       document.body.classList.remove('map-fullscreen-active')
     }
+  }, [isPseudoFullscreen])
+
+  // Defer `map.invalidateSize()` until after the CSS transition (220ms)
+  // settles. Calling it immediately makes Leaflet re-snap tile positions
+  // mid-animation, which is the loudest source of the "jump" effect.
+  // Run it once on every fullscreen state change (native or pseudo) so
+  // the tile grid catches up exactly when the layout has finished
+  // moving.
+  useEffect(() => {
+    if (!map) return
+    const handle = window.setTimeout(() => map.invalidateSize(), 250)
+    return () => window.clearTimeout(handle)
   }, [map, isFullscreen])
 
   useEffect(() => {
