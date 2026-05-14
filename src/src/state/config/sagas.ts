@@ -39,6 +39,8 @@ function* setConfigLoadedSaga() {
 
   setTimeout(() => {
     (window as any).preloader?.classList.remove('active')
+    const el = document.getElementById('preloader')
+    if (el) el.classList.remove('active')
   }, 1000)
 
   yield put({ type: ActionTypes.SET_CONFIG_SUCCESS })

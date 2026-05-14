@@ -4,22 +4,59 @@ import { setConfigError, setConfigLoaded } from './state/config/actionCreators'
 import { DEFAULT_CONFIG_NAME } from './constants'
 
 let _configName: string
+let _hardTimeoutFired = false
+let _configLoaded = false
+
+const removePreloader = () => {
+  ;(window as any).preloader?.classList.remove('active')
+  const el = document.getElementById('preloader')
+  if (el) el.classList.remove('active')
+}
+
+const HARD_CONFIG_TIMEOUT_MS = 30000
+
+const startHardTimeout = () => {
+  setTimeout(() => {
+    if (_hardTimeoutFired || _configLoaded) return
+    _hardTimeoutFired = true
+    console.warn(
+      `[config] Upstream config did not load in ${HARD_CONFIG_TIMEOUT_MS}ms, ` +
+        `falling back to defaults so the UI is not stuck on the spinner.`,
+    )
+    store.dispatch(setConfigError())
+    removePreloader()
+  }, HARD_CONFIG_TIMEOUT_MS)
+}
 
 const applyConfigName = (url: string, name?: string) => {
+  startHardTimeout()
+
   const script = document.createElement('script'),
     _name = name ? `data_${name}.js` : 'data.js'
-  getCacheVersion(url).then(ver => {
-    script.src = `https://ibronevik.ru/taxi/cache/${_name}?ver=${ver}`
+
+  const loadScript = (ver: string | number | undefined) => {
+    script.src = `https://ibronevik.ru/taxi/cache/${_name}${
+      ver !== undefined ? `?ver=${ver}` : ''
+    }`
     script.async = true
     script.onload = () => {
+      if (_configLoaded) return
+      _configLoaded = true
       store.dispatch(setConfigLoaded())
     }
     script.onerror = () => {
+      if (_configLoaded || _hardTimeoutFired) return
+      _hardTimeoutFired = true
       store.dispatch(setConfigError())
+      removePreloader()
     }
 
     document.body.appendChild(script)
-  })
+  }
+
+  getCacheVersion(url)
+    .then(ver => loadScript(ver))
+    .catch(() => loadScript(undefined))
 }
 
 class Config {
