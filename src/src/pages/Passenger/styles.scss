@@ -7,11 +7,14 @@
   // absolute bottom form anchor).
   flex: 1 1 auto;
   min-height: 0;
-  // Map : bottom slot = 85 : 15 (only in-flow children are map + placeholder;
-  // ActiveOrdersOverlay is `position:absolute` and skipped by flex sizing).
+  // The map fills the slot above the bottom sheet exactly, so the
+  // geolocation pin (which Leaflet renders at the geometric center of
+  // the map container) sits at the visual center of what the user
+  // actually sees. The placeholder reserves the panel's height in flow;
+  // the actual sheet is `position: absolute` on top of it.
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 
   // Compatibility hook for the new ActiveOrdersOverlay. Positioning
   // and safe-area handling now live inside the component itself; this
@@ -23,22 +26,26 @@
 
   &__form-map-container {
     margin-top: -16px;
-    flex: 17 1 0%;
+    flex: 1 1 auto;
     min-height: 0;
     max-height: 100%;
     width: 100%;
     z-index: 0;
-    // Default `.map-container` uses viewport height and ignores the flex row;
-    // pin the passenger map to this 85% row instead.
+    // Default `.map-container` uses viewport height; pin the passenger
+    // map to the flex slot above the placeholder instead so its visual
+    // center matches the area the user actually sees above the panel.
     height: 100%;
     box-sizing: border-box;
   }
 
   &__form-placeholder {
-    flex: 3 1 0%;
-    min-height: 0;
+    flex: none;
     width: 100%;
-    // In-flow spacer for the lower 15% band; the sheet is `absolute` on top.
+    // Approximates the collapsed bottom-sheet height so the map slot
+    // ends exactly where the panel begins. Tuned per breakpoint below.
+    height: 36dvh;
+    min-height: 260px;
+    max-height: 420px;
     pointer-events: none;
   }
 
@@ -74,16 +81,23 @@
     padding: 20px 16px 16px;
     background-color: #ffffff;
     // The draggable IS the visible bottom-sheet card; rounded top +
-    // soft shadow detach it from the map regardless of the 85/15 math.
+    // soft shadow detach it from the map.
     border-radius: 20px 20px 0 0;
     box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.06);
   }
 
   @media (max-width: 768px) {
-    gap: 10px;
-
     &__form-map-container {
       margin-top: 0;
+    }
+
+    &__form-placeholder {
+      // Mobile sheet is taller (full vote/order buttons + From/To +
+      // peek info), so the in-flow slot must be larger to keep the map
+      // pin centered above it.
+      height: 42dvh;
+      min-height: 300px;
+      max-height: 440px;
     }
 
     &__form-container {
