@@ -122,6 +122,12 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    // Animate the position offsets so the controls do not snap when the
+    // map enters/exits fullscreen (where they pick up the safe-area
+    // inset). `position` itself is non-animatable; the values that move
+    // are `top`/`right`.
+    transition: top 220ms ease, right 220ms ease;
+    will-change: top, right;
 
     button {
       width: 44px;
@@ -168,13 +174,19 @@
 //      Fullscreen API support, e.g. iOS embedded WebViews).
 //   2) `.page-section.passenger:fullscreen` — modern native API.
 //   3) `.page-section.passenger:-webkit-full-screen` — Safari prefix.
+//
+// Hiding the global `.layout__header` lives in the pseudo-only block
+// further below: in native fullscreen the browser only paints the
+// page-section subtree, so the header is already invisible. Applying
+// `display: none` on it through the native rule used to drop the header
+// out of flow a second time on the way INTO native fullscreen and
+// produced a visible double-jump on iOS Safari (client report, May 14).
 @mixin map-fullscreen-rules {
-  // Hide chrome-style overlays only (header, the active-orders strip,
-  // the placeholder spacer). Keep the bottom form ("подвал") visible
-  // because fullscreen is meant to hide the browser URL bar, not the
-  // form. `passenger__mini-orders` is preserved as a fallback selector
-  // for any in-flight builds still using the old component name.
-  .layout__header,
+  // Hide chrome-style overlays only (the active-orders strip and the
+  // placeholder spacer). Keep the bottom form ("подвал") visible because
+  // fullscreen is meant to hide the browser URL bar, not the form.
+  // `passenger__mini-orders` is preserved as a fallback selector for any
+  // in-flight builds still using the old component name.
   .passenger__mini-orders,
   .passenger__active-orders,
   .active-orders-overlay,
@@ -223,6 +235,20 @@
 body.map-fullscreen-active {
   overflow: hidden;
   @include map-fullscreen-rules;
+
+  // Pseudo-fullscreen — the global header lives outside the page-section
+  // subtree, so we hide it here. Use animatable properties (max-height,
+  // padding, opacity, transform) instead of `display: none` so that the
+  // transition defined on `.layout__header` carries the header in/out
+  // smoothly rather than collapsing the layout in a single frame.
+  .layout__header {
+    max-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(-100%) !important;
+  }
 }
 
 .page-section.passenger:fullscreen {

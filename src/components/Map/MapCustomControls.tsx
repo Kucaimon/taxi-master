@@ -82,13 +82,29 @@ export default function MapCustomControls({
   useEffect(() => {
     const host = map.getContainer()
     host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
-    // Body-level toggle so global CSS (header hide, sheet pin) can react.
-    document.body.classList.toggle('map-fullscreen-active', isFullscreen)
+    // `map-fullscreen-active` is applied ONLY for the pseudo path. Native
+    // fullscreen renders just the `.page-section` subtree, so the global
+    // `.layout__header` is already hidden by the browser — applying the
+    // body class on top of it caused a second layout shift on the way
+    // INTO native fullscreen on iOS Safari (client report, May 14: "при
+    // переходе в полноэкранный режим экран прыгает"). One path per
+    // device = one animated layout transformation.
+    document.body.classList.toggle('map-fullscreen-active', isPseudoFullscreen)
     return () => {
       host.classList.remove('map-container--pseudo-fullscreen')
       document.body.classList.remove('map-fullscreen-active')
     }
-  }, [map, isFullscreen, isPseudoFullscreen])
+  }, [map, isPseudoFullscreen])
+
+  // Defer `map.invalidateSize()` until after the CSS transition (220ms)
+  // settles. Calling it synchronously with the state change made Leaflet
+  // re-snap tile positions mid-animation, which was the loudest source
+  // of the "jump" effect when entering or leaving fullscreen.
+  useEffect(() => {
+    if (!map) return
+    const handle = window.setTimeout(() => map.invalidateSize(), 250)
+    return () => window.clearTimeout(handle)
+  }, [map, isFullscreen])
 
   const toggleFullscreen = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
