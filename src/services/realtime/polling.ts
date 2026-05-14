@@ -92,6 +92,9 @@ export class PollingTransport implements RealtimeTransport {
     this.onVisibilityChange = null
     this.onOnline = null
     this.emitter.emit('close', { source: 'polling' })
+    // Listeners are useless once disconnected; clear them so a long-lived
+    // app does not accumulate dead callbacks across mode swaps.
+    this.emitter.clear()
   }
 
   subscribe<E extends RealtimeEventName>(

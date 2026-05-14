@@ -100,6 +100,9 @@ export class WebSocketTransport implements RealtimeTransport {
       }
       this.socket = null
     }
+    // Match `PollingTransport.disconnect` — drop listeners so the
+    // instance is fully inert after teardown.
+    this.emitter.clear()
   }
 
   subscribe<E extends RealtimeEventName>(

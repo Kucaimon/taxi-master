@@ -21,3 +21,9 @@ export {
   transportFactory,
   _resetRealtimeTransportForTests,
 } from './factory'
+export {
+  onOrderUpdated,
+  onDriverMoved,
+  onTripStarted,
+  onStatusChanged,
+} from './helpers'

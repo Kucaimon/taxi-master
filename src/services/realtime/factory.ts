@@ -49,6 +49,10 @@ class FallbackTransport implements RealtimeTransport {
     callback: (payload: unknown) => void
     detach: Unsubscribe
   }> = []
+  // Internal lifecycle listeners on the primary. Kept so we can detach
+  // them explicitly when the wrapper is disconnected before fallback —
+  // otherwise the underlying transport's emitter retains them until GC.
+  private primaryLifecycleDetachers: Unsubscribe[] = []
   private hasOpened = false
   private fallenBack = false
   private fallbackTimer: ReturnType<typeof setTimeout> | null = null
@@ -63,18 +67,24 @@ class FallbackTransport implements RealtimeTransport {
     // Listen for the primary's own lifecycle to decide whether to fall
     // back. These listeners are NOT exposed to consumers — they are
     // internal to the wrapper.
-    this.primary.subscribe('open', () => {
-      this.hasOpened = true
-      if (this.fallbackTimer) {
-        clearTimeout(this.fallbackTimer)
-        this.fallbackTimer = null
-      }
-    })
+    this.primaryLifecycleDetachers.push(
+      this.primary.subscribe('open', () => {
+        this.hasOpened = true
+        if (this.fallbackTimer) {
+          clearTimeout(this.fallbackTimer)
+          this.fallbackTimer = null
+        }
+      }),
+    )
     const onPrimaryFailure = () => this.fallback()
-    this.primary.subscribe('error', onPrimaryFailure)
-    this.primary.subscribe('close', () => {
-      if (!this.hasOpened) this.fallback()
-    })
+    this.primaryLifecycleDetachers.push(
+      this.primary.subscribe('error', onPrimaryFailure),
+    )
+    this.primaryLifecycleDetachers.push(
+      this.primary.subscribe('close', () => {
+        if (!this.hasOpened) this.fallback()
+      }),
+    )
 
     this.primary.connect()
 
@@ -88,6 +98,8 @@ class FallbackTransport implements RealtimeTransport {
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = null
     }
+    for (const off of this.primaryLifecycleDetachers) off()
+    this.primaryLifecycleDetachers = []
     this.primary.disconnect()
     this.secondary.disconnect()
     for (const sub of this.subs) sub.detach()
@@ -122,6 +134,8 @@ class FallbackTransport implements RealtimeTransport {
       clearTimeout(this.fallbackTimer)
       this.fallbackTimer = null
     }
+    for (const off of this.primaryLifecycleDetachers) off()
+    this.primaryLifecycleDetachers = []
     try {
       this.primary.disconnect()
     } catch (error) {

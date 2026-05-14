@@ -11,7 +11,7 @@ import {
 } from '../../tools/sagaUtils'
 import { updateCompletedOrderDuration } from '../../tools/order'
 import { geopositionToPoint } from '../../tools/maps'
-import { getRealtimeTransport } from '../../services/realtime'
+import { getRealtimeTransport, onOrderUpdated } from '../../services/realtime'
 import * as API from '../../API'
 import { IRootState } from '..'
 import { geoposition as geopositionSelector } from '../geolocation/selectors'
@@ -106,9 +106,11 @@ let _activeOrdersTransportChannel:
 const getActiveOrdersTransportChannel = () => {
   if (_activeOrdersTransportChannel) return _activeOrdersTransportChannel
   _activeOrdersTransportChannel = eventChannel<'tick'>(emit => {
-    const transport = getRealtimeTransport()
-    transport.connect()
-    const unsubscribe = transport.subscribe('orderUpdated', payload => {
+    // `getRealtimeTransport()` returns the singleton; `.connect()` is
+    // idempotent so a second subscriber here is a no-op. The typed
+    // helper `onOrderUpdated` hides the event name from this seam.
+    getRealtimeTransport().connect()
+    const unsubscribe = onOrderUpdated(payload => {
       if (payload.scope === 'active') emit('tick')
     })
     return () => {
