@@ -11,6 +11,7 @@ import { EStatuses, EUserRoles, IUser } from './types/types'
 import { userSelectors } from './state/user'
 import Sandbox from './pages/Sandbox'
 import PageSection from './components/PageSection'
+import { getFreshRedirectPath } from './utils/storage'
 
 const PassengerOrder = lazy(() => import('./pages/Passenger'))
 const Order = lazy(() => import('./pages/Order'))
@@ -49,24 +50,25 @@ const UnavailableBase = () => {
   </PageSection>
 }
 
+// Catch-all redirect target. The pre-OAuth intent stored by `Login.tsx`
+// wins over the user's `u_role`, because the backend can echo back an
+// existing Driver account when the SPA actually wants to land in the
+// passenger flow — this was the Google-login bug reported on May 7.
+const resolveCatchAllTarget = (user: IUser | null): string => {
+  const fresh = getFreshRedirectPath()
+  if (fresh) return fresh
+  if ([EUserRoles.Client, EUserRoles.Agent].includes(user?.u_role as EUserRoles))
+    return '/passenger-order'
+  if (user?.u_role === EUserRoles.Driver) return '/driver-order'
+  return '/'
+}
+
 const AppRoutes = ({ user }: {user: IUser | null}) => (
   <Routes>
     <Route
       path="/*"
       element={<>
-        <Navigate
-          replace
-          to={
-            [
-              EUserRoles.Client,
-              EUserRoles.Agent,
-            ].includes(user?.u_role as EUserRoles) ?
-              '/passenger-order' :
-              user?.u_role === EUserRoles.Driver ?
-                '/driver-order' :
-                '/'
-          }
-        />
+        <Navigate replace to={resolveCatchAllTarget(user)} />
         <PassengerOrder />
       </>}
     />

@@ -17,6 +17,7 @@ import {
   getRedirectModule,
   getRedirectPath,
   getStoredTokens,
+  isRedirectFresh,
   setRedirectTarget,
   setStoredTokens,
 } from '../../utils/storage'
@@ -345,7 +346,30 @@ function* handleRedirectSaga() {
   const params = new URLSearchParams(window.location.search)
   const authHash = params.get('auth_hash')
   const state = params.get('state')
-  if (state === 'passenger' || state === 'driver') {
+
+  // Client reported (May 7): incognito → passenger, normal browser →
+  // driver. Difference is that the backend, in normal mode, recognises
+  // the email as an existing Driver account via cookies and echoes
+  // `state=driver` back regardless of what the SPA originally sent.
+  //
+  // The SPA already stored the *intended* module before the OAuth
+  // redirect (`Login.tsx → setRedirectTarget`). Treat that as the
+  // ground truth when it is fresh — only fall back to the callback's
+  // `state` when there is no recent click on file (deep-link entry,
+  // stale tab, etc.). This is a frontend-only fix per the client's
+  // and backend dev's preference.
+  const hasFreshIntent = isRedirectFresh()
+  if (!authHash && !hasFreshIntent) {
+    // Defensive cleanup at app boot: there is no OAuth in flight and
+    // no fresh click, so any leftover redirect target is stale and
+    // must not influence the next session's routing.
+    clearRedirectTarget()
+    deleteCookie(OAUTH_RETURN_PATH_COOKIE)
+  }
+  if (
+    !hasFreshIntent &&
+    (state === 'passenger' || state === 'driver')
+  ) {
     const path = state === 'driver' ? '/driver-order' : '/passenger-order'
     setRedirectTarget(state, path)
     deleteCookie(OAUTH_RETURN_PATH_COOKIE)

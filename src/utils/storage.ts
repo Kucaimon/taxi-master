@@ -20,7 +20,20 @@ const STORAGE_KEYS = {
   user: 'state.user.user',
   redirectModule: 'state.auth.redirectModule',
   redirectPath: 'state.auth.redirectPath',
+  // Timestamp (ms since epoch) of the last `setRedirectTarget`. Lets the
+  // OAuth callback handler distinguish a fresh, intentional click from
+  // stale data left over by a previous (incomplete) session — see the
+  // Google-login fix in `state/user/sagas.ts` and `Routes.tsx`.
+  redirectAt: 'state.auth.redirectAt',
 } as const
+
+/**
+ * Treat the stored redirect target as "fresh" for this many ms after
+ * `setRedirectTarget`. Ten minutes safely covers a typical Google OAuth
+ * round-trip (including 2FA / account picker) and is short enough that
+ * forgotten data from a previous session never wins over a new click.
+ */
+const REDIRECT_FRESHNESS_MS = 10 * 60 * 1000
 
 const safeGet = (key: string): string | null => {
   try {
@@ -73,12 +86,43 @@ export const getRedirectModule = (): string | null =>
 export const getRedirectPath = (): string | null =>
   safeGet(STORAGE_KEYS.redirectPath)
 
+const getRedirectAt = (): number | null => {
+  const raw = safeGet(STORAGE_KEYS.redirectAt)
+  if (!raw) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * `true` only when the stored redirect target was set within
+ * `REDIRECT_FRESHNESS_MS`. Used to ignore stale leftovers from a
+ * previous session and to prevent the OAuth callback from overwriting
+ * a freshly clicked intent with whatever the backend echoes back.
+ */
+export const isRedirectFresh = (): boolean => {
+  const at = getRedirectAt()
+  if (at === null) return false
+  return Date.now() - at < REDIRECT_FRESHNESS_MS
+}
+
+/**
+ * Returns the stored redirect path only when it is fresh. Designed for
+ * synchronous use in render paths (router catch-all) where a stale
+ * leftover must NOT silently win over `user.u_role`.
+ */
+export const getFreshRedirectPath = (): string | null => {
+  if (!isRedirectFresh()) return null
+  return getRedirectPath()
+}
+
 export const setRedirectTarget = (module: string, path: string) => {
   safeSet(STORAGE_KEYS.redirectModule, module)
   safeSet(STORAGE_KEYS.redirectPath, path)
+  safeSet(STORAGE_KEYS.redirectAt, String(Date.now()))
 }
 
 export const clearRedirectTarget = () => {
   safeRemove(STORAGE_KEYS.redirectModule)
   safeRemove(STORAGE_KEYS.redirectPath)
+  safeRemove(STORAGE_KEYS.redirectAt)
 }
