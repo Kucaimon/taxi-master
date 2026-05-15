@@ -167,6 +167,29 @@
     width: 100vw !important;
     border-radius: 0;
   }
+
+  &--fullscreen-animating {
+    transform-origin: top left;
+    transition:
+      transform 360ms cubic-bezier(.2, .8, .2, 1),
+      border-radius 360ms cubic-bezier(.2, .8, .2, 1),
+      box-shadow 360ms cubic-bezier(.2, .8, .2, 1);
+    will-change: transform;
+  }
+
+  &--fullscreen-entering,
+  &--fullscreen-exiting {
+    transform:
+      translate3d(
+        var(--map-fullscreen-x, 0),
+        var(--map-fullscreen-y, 0),
+        0
+      )
+      scale(
+        var(--map-fullscreen-scale-x, 1),
+        var(--map-fullscreen-scale-y, 1)
+      );
+  }
 }
 
 // Shared fullscreen rules. Applied through three different selectors so

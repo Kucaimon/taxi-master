@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useMap } from 'react-leaflet'
 import * as storage from '../../tools/localStorage'
 import { logGeolocationError } from '../../tools/geoLog'
@@ -20,6 +20,8 @@ import { logGeolocationError } from '../../tools/geoLog'
 
 const CACHED_POSITION_KEY = 'map.lastKnownPosition'
 const CACHED_POSITION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
+const FULLSCREEN_ANIMATION_MS = 360
+const FULLSCREEN_ANIMATION_START_DELAY_MS = 32
 
 interface ICachedPosition {
   latitude: number
@@ -65,6 +67,14 @@ export default function MapCustomControls({
 
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false)
+  const pseudoTargetRectRef = useRef<DOMRect | null>(null)
+  const pseudoAnimationTimerRef = useRef<number | null>(null)
+  const pseudoAnimationRef = useRef<Animation | null>(null)
+
+  const getFullscreenHost = useCallback((): HTMLElement => {
+    const mapEl = map.getContainer()
+    return (mapEl.closest('.map-container') as HTMLElement | null) ?? mapEl
+  }, [map])
 
   useEffect(() => {
     const onChange = () => {
@@ -80,7 +90,7 @@ export default function MapCustomControls({
   }, [map, isPseudoFullscreen])
 
   useEffect(() => {
-    const host = map.getContainer()
+    const host = getFullscreenHost()
     host.classList.toggle('map-container--pseudo-fullscreen', isPseudoFullscreen)
     // `map-fullscreen-active` is applied ONLY for the pseudo path. Native
     // fullscreen renders just the `.page-section` subtree, so the global
@@ -90,11 +100,26 @@ export default function MapCustomControls({
     // переходе в полноэкранный режим экран прыгает"). One path per
     // device = one animated layout transformation.
     document.body.classList.toggle('map-fullscreen-active', isPseudoFullscreen)
+  }, [getFullscreenHost, isPseudoFullscreen])
+
+  useEffect(() => {
     return () => {
+      const host = getFullscreenHost()
       host.classList.remove('map-container--pseudo-fullscreen')
+      host.classList.remove('map-container--fullscreen-animating')
+      host.classList.remove('map-container--fullscreen-entering')
+      host.classList.remove('map-container--fullscreen-exiting')
       document.body.classList.remove('map-fullscreen-active')
+      if (pseudoAnimationTimerRef.current) {
+        window.clearTimeout(pseudoAnimationTimerRef.current)
+        pseudoAnimationTimerRef.current = null
+      }
+      if (pseudoAnimationRef.current) {
+        pseudoAnimationRef.current.cancel()
+        pseudoAnimationRef.current = null
+      }
     }
-  }, [map, isPseudoFullscreen])
+  }, [getFullscreenHost])
 
   // Defer `map.invalidateSize()` until after the CSS transition (220ms)
   // settles. Calling it synchronously with the state change made Leaflet
@@ -105,6 +130,175 @@ export default function MapCustomControls({
     const handle = window.setTimeout(() => map.invalidateSize(), 250)
     return () => window.clearTimeout(handle)
   }, [map, isFullscreen])
+
+  const setPseudoAnimationVars = useCallback((
+    host: HTMLElement,
+    rect: DOMRect,
+  ) => {
+    const vw = Math.max(window.innerWidth, 1)
+    const vh = Math.max(window.innerHeight, 1)
+    host.style.setProperty('--map-fullscreen-x', `${rect.left}px`)
+    host.style.setProperty('--map-fullscreen-y', `${rect.top}px`)
+    host.style.setProperty('--map-fullscreen-scale-x', `${rect.width / vw}`)
+    host.style.setProperty('--map-fullscreen-scale-y', `${rect.height / vh}`)
+  }, [])
+
+  const getPseudoTransform = useCallback((rect: DOMRect): string => {
+    const vw = Math.max(window.innerWidth, 1)
+    const vh = Math.max(window.innerHeight, 1)
+    return `translate3d(${rect.left}px, ${rect.top}px, 0) scale(${
+      rect.width / vw
+    }, ${rect.height / vh})`
+  }, [])
+
+  const clearPseudoAnimationTimer = useCallback(() => {
+    if (pseudoAnimationTimerRef.current) {
+      window.clearTimeout(pseudoAnimationTimerRef.current)
+      pseudoAnimationTimerRef.current = null
+    }
+    if (pseudoAnimationRef.current) {
+      pseudoAnimationRef.current.cancel()
+      pseudoAnimationRef.current = null
+    }
+  }, [])
+
+  const finishPseudoAnimation = useCallback((host: HTMLElement) => {
+    host.classList.remove('map-container--fullscreen-animating')
+    host.classList.remove('map-container--fullscreen-entering')
+    host.classList.remove('map-container--fullscreen-exiting')
+    pseudoAnimationTimerRef.current = null
+    pseudoAnimationRef.current = null
+    map.invalidateSize()
+  }, [map])
+
+  const enterPseudoFullscreen = useCallback(() => {
+    const host = getFullscreenHost()
+    const rect = host.getBoundingClientRect()
+    pseudoTargetRectRef.current = rect
+    clearPseudoAnimationTimer()
+    setPseudoAnimationVars(host, rect)
+
+    host.classList.add(
+      'map-container--pseudo-fullscreen',
+      'map-container--fullscreen-animating',
+      'map-container--fullscreen-entering',
+    )
+    document.body.classList.add('map-fullscreen-active')
+    setIsPseudoFullscreen(true)
+    setIsFullscreen(true)
+
+    if (typeof host.animate === 'function') {
+      const animation = host.animate(
+        [
+          { transform: getPseudoTransform(rect) },
+          { transform: 'translate3d(0, 0, 0) scale(1, 1)' },
+        ],
+        {
+          duration: FULLSCREEN_ANIMATION_MS,
+          easing: 'cubic-bezier(.2, .8, .2, 1)',
+        },
+      )
+      pseudoAnimationRef.current = animation
+      animation.onfinish = () => {
+        if (pseudoAnimationRef.current !== animation) return
+        finishPseudoAnimation(host)
+      }
+      animation.oncancel = () => {
+        if (pseudoAnimationRef.current === animation)
+          pseudoAnimationRef.current = null
+      }
+      return
+    }
+
+    // Force the browser to commit the starting transform before we
+    // remove it. Without this tiny frame, some mobile engines coalesce
+    // both style changes and the fullscreen still looks like a jump.
+    host.getBoundingClientRect()
+    window.setTimeout(() => {
+      host.classList.remove('map-container--fullscreen-entering')
+      pseudoAnimationTimerRef.current = window.setTimeout(
+        () => finishPseudoAnimation(host),
+        FULLSCREEN_ANIMATION_MS,
+      )
+    }, FULLSCREEN_ANIMATION_START_DELAY_MS)
+  }, [
+    clearPseudoAnimationTimer,
+    finishPseudoAnimation,
+    getFullscreenHost,
+    getPseudoTransform,
+    setPseudoAnimationVars,
+  ])
+
+  const exitPseudoFullscreen = useCallback(() => {
+    const host = getFullscreenHost()
+    const rect = pseudoTargetRectRef.current
+    clearPseudoAnimationTimer()
+
+    if (!rect) {
+      setIsPseudoFullscreen(false)
+      setIsFullscreen(false)
+      return
+    }
+
+    setPseudoAnimationVars(host, rect)
+    host.classList.add(
+      'map-container--fullscreen-animating',
+      'map-container--fullscreen-exiting',
+    )
+
+    if (typeof host.animate === 'function') {
+      const animation = host.animate(
+        [
+          { transform: 'translate3d(0, 0, 0) scale(1, 1)' },
+          { transform: getPseudoTransform(rect) },
+        ],
+        {
+          duration: FULLSCREEN_ANIMATION_MS,
+          easing: 'cubic-bezier(.2, .8, .2, 1)',
+          fill: 'forwards',
+        },
+      )
+      pseudoAnimationRef.current = animation
+      animation.onfinish = () => {
+        if (pseudoAnimationRef.current !== animation) return
+        pseudoAnimationRef.current = null
+        animation.cancel()
+        host.classList.remove(
+          'map-container--pseudo-fullscreen',
+          'map-container--fullscreen-animating',
+          'map-container--fullscreen-exiting',
+        )
+        document.body.classList.remove('map-fullscreen-active')
+        setIsPseudoFullscreen(false)
+        setIsFullscreen(false)
+        map.invalidateSize()
+      }
+      animation.oncancel = () => {
+        if (pseudoAnimationRef.current === animation)
+          pseudoAnimationRef.current = null
+      }
+      return
+    }
+
+    pseudoAnimationTimerRef.current = window.setTimeout(() => {
+      host.classList.remove(
+        'map-container--pseudo-fullscreen',
+        'map-container--fullscreen-animating',
+        'map-container--fullscreen-exiting',
+      )
+      document.body.classList.remove('map-fullscreen-active')
+      setIsPseudoFullscreen(false)
+      setIsFullscreen(false)
+      pseudoAnimationTimerRef.current = null
+      map.invalidateSize()
+    }, FULLSCREEN_ANIMATION_MS)
+  }, [
+    clearPseudoAnimationTimer,
+    getFullscreenHost,
+    getPseudoTransform,
+    map,
+    setPseudoAnimationVars,
+  ])
 
   const toggleFullscreen = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -119,14 +313,25 @@ export default function MapCustomControls({
       // everything visible while the browser still removes its URL
       // bar and OS chrome.
       const mapEl = map.getContainer()
+      const host = getFullscreenHost()
       const target =
-        (mapEl.closest('.page-section') as HTMLElement | null) ?? mapEl
+        (host.closest('.page-section') as HTMLElement | null) ?? host
       const element = target as any
       const doc = document as any
+      const isPassengerMap = !!host.closest('.page-section.passenger')
+      const isMobileLike = window.matchMedia('(max-width: 768px)').matches
+      const shouldUsePseudo =
+        isPassengerMap ||
+        isMobileLike ||
+        (!element.requestFullscreen && !element.webkitRequestFullscreen)
 
       if (isPseudoFullscreen) {
-        setIsPseudoFullscreen(false)
-        setIsFullscreen(false)
+        exitPseudoFullscreen()
+        return
+      }
+
+      if (shouldUsePseudo) {
+        enterPseudoFullscreen()
         return
       }
 
@@ -162,7 +367,13 @@ export default function MapCustomControls({
         setIsFullscreen(true)
       }
     },
-    [map, isPseudoFullscreen],
+    [
+      enterPseudoFullscreen,
+      exitPseudoFullscreen,
+      getFullscreenHost,
+      map,
+      isPseudoFullscreen,
+    ],
   )
 
   const handleMyLocation = useCallback(
