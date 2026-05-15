@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import cn from 'classnames'
 import L from 'leaflet'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import {
   MapContainer, TileLayer,
   Marker, CircleMarker, Circle, Popup, Tooltip, Polyline,
@@ -438,7 +439,7 @@ function MapContent({
         </Marker>
       )}
       <img
-        src="https://unpkg.com/leaflet@1.6.0/dist/images/marker-icon-2x.png"
+        src={markerIcon2x}
         className="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive"
         alt="Центр"
         tabIndex={0}

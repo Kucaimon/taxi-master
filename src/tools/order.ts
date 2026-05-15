@@ -91,6 +91,9 @@ export const calculateFinalPrice = (order: IOrder | null) => {
   options = {
     ...options,
     ...{
+      submit_price: order.b_options?.submitPrice,
+      // Keep the historical misspelling available for any legacy
+      // pricing formulas that may already reference it.
       submit_rice: order.b_options?.submitPrice,
     },
   }

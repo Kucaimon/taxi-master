@@ -385,20 +385,6 @@ const VotingForm = function VotingForm({
             <span className="passenger-voting-form__car-class-title">
               {t(TRANSLATION.AUTO_CLASS)}
             </span>
-            <div className="passenger-voting-form__car-nearby-info">
-              <Icon
-                src="carNearby"
-                className="passenger-voting-form__car-nearby-icon"
-              />
-              <span className="passenger-voting-form__car-nearby-info-text">{7} автомобилей рядом</span>
-            </div>
-            <div className="passenger-voting-form__car-nearby-info">
-              <Icon
-                src="timeWait"
-                className="passenger-voting-form__waiting-time-icon"
-              />
-              <span className="passenger-voting-form__car-nearby-info-text">~{5} минут</span>
-            </div>
           </div>
           <div ref={carSliderRef}>
             <CarClassSlider />
